@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="refresh" content="3;url=https://pferreira1030.github.io/StayPerfitapp/" />
+  <title>StayPerfit PRO — App</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .logo-wrap {
+      margin-bottom: 2rem;
+    }
+
+    .logo-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #e8f542, #b8c520);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.2rem;
+      font-size: 2.2rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+
+    h1 span {
+      color: #e8f542;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: #888;
+      margin-top: 0.4rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+    }
+
+    .card {
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      max-width: 400px;
+      width: 100%;
+      margin: 2rem 0;
+    }
+
+    .card p {
+      color: #aaa;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 1.8rem;
+    }
+
+    .btn {
+      display: inline-block;
+      background: #e8f542;
+      color: #0a0a0a;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 0.85rem 2rem;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: transform 0.15s, background 0.15s;
+      width: 100%;
+    }
+
+    .btn:hover {
+      background: #d4df30;
+      transform: translateY(-1px);
+    }
+
+    .countdown-wrap {
+      margin-top: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #333;
+      border-top-color: #e8f542;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .countdown-wrap span {
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    #count {
+      color: #e8f542;
+      font-weight: 700;
+    }
+
+    .footer {
+      font-size: 0.75rem;
+      color: #444;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="logo-wrap">
+    <div class="logo-icon">💪</div>
+    <h1>Stay<span>Perfit</span> PRO</h1>
+    <p class="subtitle">Sistema de Gestão Fitness</p>
+  </div>
+
+  <div class="card">
+    <p>Vai ser redirecionado para a tua área de cliente em instantes. Se não acontecer, clica no botão abaixo.</p>
+
+    <a href="https://pferreira1030.github.io/StayPerfitapp/" class="btn">
+      Entrar na App →
+    </a>
+
+    <div class="countdown-wrap">
+      <div class="spinner"></div>
+      <span>A redirecionar em <span id="count">3</span>s…</span>
+    </div>
+  </div>
+
+  <p class="footer">stayperfit.pt</p>
+
+  <script>
+    let n = 3;
+    const el = document.getElementById('count');
+    const timer = setInterval(() => {
+      n--;
+      el.textContent = n;
+      if (n <= 0) {
+        clearInterval(timer);
+        window.location.href = 'https://pferreira1030.github.io/StayPerfitapp/';
+      }
+    }, 1000);
+  </script>
+
+</body>
+</html>
