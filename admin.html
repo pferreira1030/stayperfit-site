@@ -335,10 +335,28 @@ td.tp a:hover{color:var(--green);}
 
 <script>
 // ══ CONFIG ══
-const PASS = 'spf2024'; // ← muda esta password
+const PASS       = 'spf2024';
+const SPF_URL    = 'https://yntrbpntgjgzrxolyhwn.supabase.co';
+const SPF_ANON   = 'sb_publishable_l_YdoQhNxNU0CIgQfy18Zg_xuj7quqS';
+const SPF_SECRET = 'sb_secret_1A3_5xbocYMWrE-aGGWfgw_gy7Nbl9o';
 
 // ══ STATE ══
-let leads = [], sortKey = 'ts', sortDir = -1, editIdx = null, lastCount = 0;
+let leads = [], sortKey = 'created_at', sortDir = -1, editIdx = null, lastCount = 0;
+
+// ══ SUPABASE HELPER ══
+async function sb(path, opts = {}) {
+  const res = await fetch(SPF_URL + path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SPF_ANON,
+      'Authorization': 'Bearer ' + SPF_SECRET,
+      ...(opts.headers || {})
+    }
+  });
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : null;
+}
 
 // ══ LOGIN ══
 function doLogin() {
@@ -360,31 +378,64 @@ function doLogout() {
   clearInterval(window._sync);
 }
 
-// ══ DATA ══
-function load() {
-  const raw = JSON.parse(localStorage.getItem('spf_leads') || '[]');
-  leads = raw.map(l => ({ status:'Novo', notes:'', ...l }));
-  lastCount = leads.length;
-  renderAll();
+// ══ DATA — Supabase ══
+async function load() {
+  try {
+    const data = await sb('/rest/v1/leads?select=*&order=created_at.desc');
+    leads = (data || []).map(l => ({ status: l.status || 'Novo', notes: l.notes || '', ...l }));
+    lastCount = leads.length;
+    renderAll();
+  } catch(e) { console.error('Erro ao carregar:', e); }
 }
-function save() { localStorage.setItem('spf_leads', JSON.stringify(leads)); }
+
+async function updateLead(id, fields) {
+  try {
+    await sb('/rest/v1/leads?id=eq.' + id, {
+      method: 'PATCH',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify(fields)
+    });
+  } catch(e) { console.error('Erro ao atualizar:', e); }
+}
+
+async function deleteLead(idx) {
+  if (!confirm('Eliminar este lead?')) return;
+  const lead = leads[idx];
+  try {
+    await sb('/rest/v1/leads?id=eq.' + lead.id, { method: 'DELETE' });
+    leads.splice(idx, 1);
+    renderAll();
+  } catch(e) { console.error('Erro ao eliminar:', e); }
+}
+
+async function clearAll() {
+  if (!confirm('⚠️ Apagar TODOS os leads? Irreversível!')) return;
+  try {
+    // Delete all rows — requires a filter; use created_at is not null
+    await sb('/rest/v1/leads?created_at=not.is.null', { method: 'DELETE' });
+    leads = [];
+    renderAll();
+  } catch(e) { console.error('Erro ao limpar:', e); }
+}
 
 function renderAll() { renderStats(); renderTable(); updateBadge(); }
 
-// ══ AUTO-SYNC ══
+// ══ AUTO-SYNC (cada 15s) ══
 function startSync() {
-  window._sync = setInterval(() => {
-    const raw = JSON.parse(localStorage.getItem('spf_leads') || '[]');
-    if (raw.length > lastCount) {
-      const newest = raw[0];
-      leads = raw.map(l => ({ status:'Novo', notes:'', ...l }));
-      lastCount = raw.length;
+  window._sync = setInterval(async () => {
+    try {
+      const data = await sb('/rest/v1/leads?select=*&order=created_at.desc');
+      const fresh = (data || []).map(l => ({ status: l.status || 'Novo', notes: l.notes || '', ...l }));
+      if (fresh.length > lastCount) {
+        showToast(fresh[0].name, fresh[0].phone);
+      }
+      leads = fresh;
+      lastCount = leads.length;
       renderAll();
-      showToast(newest.name, newest.phone);
-    }
+    } catch(e) {}
     const t = new Date().toLocaleTimeString('pt-PT', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
     document.getElementById('syncTime').textContent = 'Sync: ' + t;
-  }, 10000);
+  }, 15000);
 }
 
 function showToast(name, phone) {
@@ -468,7 +519,7 @@ function renderTable() {
         </select>
       </td>
       <td><button class="ibtn" onclick="openModal(${ri})">${note?'📝 Ver':'+ Nota'}</button></td>
-      <td><button class="ibtn del" onclick="del(${ri})" title="Eliminar">
+      <td><button class="ibtn del" onclick="deleteLead(${ri})" title="Eliminar">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
       </button></td>
     </tr>`;
@@ -484,9 +535,13 @@ function sortBy(k) {
   renderTable();
 }
 
-function chgStatus(i, v) { leads[i].status = v; save(); renderStats(); updateBadge(); }
-function del(i) { if (!confirm('Eliminar este lead?')) return; leads.splice(i,1); save(); renderAll(); }
-function clearAll() { if (!confirm('⚠️ Apagar TODOS os leads? Irreversível!')) return; leads=[]; localStorage.removeItem('spf_leads'); renderAll(); }
+function chgStatus(i, v) {
+  leads[i].status = v;
+  updateLead(leads[i].id, { status: v });
+  renderStats();
+  updateBadge();
+}
+// del e clearAll definidos acima com Supabase
 
 // ══ MODAL ══
 function openModal(i) {
@@ -503,8 +558,11 @@ function closeModal() {
 }
 function saveNota() {
   if (editIdx === null) return;
-  leads[editIdx].notes = document.getElementById('mta').value;
-  save(); renderTable(); closeModal();
+  const val = document.getElementById('mta').value;
+  leads[editIdx].notes = val;
+  updateLead(leads[editIdx].id, { notes: val });
+  renderTable();
+  closeModal();
 }
 document.getElementById('modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeModal(); });
 
