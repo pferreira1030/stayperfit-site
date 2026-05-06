@@ -1490,12 +1490,20 @@ if (heroCta && navCta) {
     <span class="lead-tag">Oferta Limitada</span>
     <div class="lead-title">AGENDA A TUA<br>CHAMADA GRATUITA!</div>
     <p class="lead-sub">Deixa os teus dados e entro em contacto nas próximas 24h para perceber como te posso ajudar a transformar o teu corpo.</p>
-    <div class="lead-form">
-      <input class="lead-input" type="text"   id="leadName"  placeholder="O teu nome" autocomplete="name">
-      <input class="lead-input" type="tel"    id="leadPhone" placeholder="Número de telemóvel" autocomplete="tel">
-      <button class="lead-submit" onclick="submitLead()">Quero a Minha Chamada Gratuita →</button>
+    <div id="leadFormWrap">
+      <div class="lead-form">
+        <input class="lead-input" type="text"   id="leadName"  placeholder="O teu nome" autocomplete="name">
+        <input class="lead-input" type="tel"    id="leadPhone" placeholder="Número de telemóvel" autocomplete="tel">
+        <button class="lead-submit" onclick="submitLead()">Quero a Minha Chamada Gratuita →</button>
+      </div>
+      <p class="lead-privacy">🔒 Os teus dados são confidenciais. Sem spam, prometido.</p>
     </div>
-    <p class="lead-privacy">🔒 Os teus dados são confidenciais. Sem spam, prometido.</p>
+    <div id="leadSuccess" style="display:none; text-align:center; padding: 12px 0 8px;">
+      <div style="font-size:2.8rem; margin-bottom:10px;">✅</div>
+      <div style="font-size:1.25rem; font-weight:800; color:#c8ff00; margin-bottom:10px; text-transform:uppercase; letter-spacing:.5px;">Recebido!</div>
+      <p style="color:#ccc; font-size:.95rem; line-height:1.6; margin:0 0 18px;">Entro em contacto contigo nas próximas <strong style="color:#fff;">24 horas</strong>.<br>Fica atento ao teu telemóvel! 📲</p>
+      <button class="lead-submit" onclick="closeLeadPopup()" style="max-width:220px; margin:0 auto; display:block;">Fechar</button>
+    </div>
   </div>
 </div>
 
@@ -1601,7 +1609,10 @@ window.submitLead = async function() {
   const phone = document.getElementById('leadPhone').value.trim();
   if (!name || !phone) { alert('Por favor preenche o teu nome e número de telefone.'); return; }
   await saveLead(name, phone, 'Pop-up Chamada Gratuita');
-  closeLeadPopup();
+  // Mostrar confirmação dentro do popup
+  document.getElementById('leadFormWrap').style.display = 'none';
+  document.getElementById('leadSuccess').style.display  = 'block';
+  sessionStorage.setItem('spf_lead_shown', '1');
 }
 </script>
 
