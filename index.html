@@ -44,8 +44,8 @@ body {
 }
 .announce-bar-inner {
   display:inline-block;
-  animation: marquee 22s linear infinite;
   white-space:nowrap;
+  animation: marquee 18s linear infinite;
 }
 @keyframes marquee {
   0%   { transform: translateX(0); }
@@ -808,8 +808,22 @@ table { table-layout:fixed; }
 <body>
 
 <!-- ANNOUNCEMENT BAR -->
-<div class="announce-bar">
-<span class="announce-bar-inner">⚡ Restam 3 vagas para acompanhamento &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ⚡ Restam 3 vagas para acompanhamento &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ⚡ Restam 3 vagas para acompanhamento &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ⚡ Restam 3 vagas para acompanhamento &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ⚡ Restam 3 vagas para acompanhamento &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ⚡ Restam 3 vagas para acompanhamento &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;</span></div>
+<div class="announce-bar" style="overflow:hidden; white-space:nowrap; display:flex;">
+<span class="announce-bar-inner" id="announceTicker">⚡ Restam 3 vagas para acompanhamento &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; 🔥 Resultados reais, sem dietas absurdas &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; ⚡ Restam 3 vagas para acompanhamento &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; 🔥 Resultados reais, sem dietas absurdas &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;</span>
+</div>
+<script>
+(function(){
+  var ticker = document.getElementById('announceTicker');
+  function ensureSeamless() {
+    var barW = ticker.parentElement.offsetWidth;
+    while (ticker.scrollWidth < barW * 2.5) {
+      ticker.innerHTML += ticker.innerHTML;
+    }
+  }
+  ensureSeamless();
+  window.addEventListener('resize', ensureSeamless);
+})();
+</script>
 
 <!-- NAV -->
 <nav>
