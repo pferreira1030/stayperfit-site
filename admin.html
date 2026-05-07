@@ -1498,7 +1498,7 @@ function openClientModal(i = null) {
   document.getElementById('c-notes').value = c.notes || '';
   document.getElementById('clientModal').classList.add('open');
   document.body.style.overflow = 'hidden';
-}
+  setTimeout(initDatePickers, 50);
 function closeClientModal() { document.getElementById('clientModal').classList.remove('open'); document.body.style.overflow = ''; }
 
 function saveClient() {
@@ -1660,6 +1660,7 @@ function openVideoModal(i=null) {
   document.getElementById('v-cover-input').value='';
   document.getElementById('videoModal').classList.add('open');
   document.body.style.overflow='hidden';
+  setTimeout(initDatePickers, 50);
 }
 function closeVideoModal(){document.getElementById('videoModal').classList.remove('open');document.body.style.overflow='';}
 function saveVideo(){
@@ -1895,6 +1896,7 @@ function openCampaignModal(i=null){
   switchCampTab('info');
   document.getElementById('campaignModal').classList.add('open');
   document.body.style.overflow='hidden';
+  setTimeout(initDatePickers, 50);
 }
 function closeCampaignModal(){document.getElementById('campaignModal').classList.remove('open');document.body.style.overflow='';}
 function saveCampaign(){
@@ -2023,6 +2025,7 @@ function openFixedExpModal(i=null){
   document.getElementById('fe-notes').value=fe.notes||'';
   document.getElementById('fixedExpModal').classList.add('open');
   document.body.style.overflow='hidden';
+  setTimeout(initDatePickers, 50);
 }
 function closeFixedExpModal(){document.getElementById('fixedExpModal').classList.remove('open');document.body.style.overflow='';}
 function saveFixedExp(){
@@ -2049,6 +2052,7 @@ function openFinanceModal(i=null){
   document.getElementById('fin-value').value=f.value||'';
   document.getElementById('financeModal').classList.add('open');
   document.body.style.overflow='hidden';
+  setTimeout(initDatePickers, 50);
 }
 function closeFinanceModal(){document.getElementById('financeModal').classList.remove('open');document.body.style.overflow='';}
 function saveFinance(){
@@ -2146,6 +2150,7 @@ function openTaskModal(i=null,defaultCol='todo'){
   document.getElementById('task-prio').value=t.prio||'Normal';
   document.getElementById('taskModal').classList.add('open');
   document.body.style.overflow='hidden';
+  setTimeout(initDatePickers, 50);
 }
 function closeTaskModal(){document.getElementById('taskModal').classList.remove('open');document.body.style.overflow='';}
 function saveTask(){
@@ -2165,12 +2170,6 @@ function initDatePickers() {
     locale: 'pt', dateFormat: 'Y-m-d',
     allowInput: true,
     disableMobile: true,
-    theme: 'dark',
-  };
-  const fpTimeCfg = {
-    ...fpCfg,
-    enableTime: true, noCalendar: false,
-    time_24hr: true, dateFormat: 'Y-m-d',
   };
   const dateIds = [
     'c-start','c-renew',
@@ -2186,20 +2185,6 @@ function initDatePickers() {
   });
 }
 
-// Re-init pickers whenever a modal opens (pickers may not exist yet)
-const _origShowPage = showPage;
-function showPage(id, btn) {
-  _origShowPage(id, btn);
-  setTimeout(initDatePickers, 100);
-}
-
-// Patch modal openers to init after open
-['openClientModal','openVideoModal','openCampaignModal','openFinanceModal','openFixedExpModal','openTaskModal'].forEach(fn => {
-  const orig = window[fn];
-  window[fn] = function(...args) { orig.apply(this, args); setTimeout(initDatePickers, 80); };
-});
-
-// Also fix c-renew so flatpickr doesn't block calcRenew writing to it
 document.addEventListener('DOMContentLoaded', () => {
   initDatePickers();
   const ni = document.getElementById('notif-email');
