@@ -417,6 +417,10 @@ tr.row-cancelado{background:rgba(168,85,247,.04) !important;}
     </div>
     <div class="sbottom">
       <div class="sbottom-info">Auto-atualiza a cada 15s<span id="syncTime" style="display:block;margin-top:2px;color:#383838;"></span></div>
+      <button class="sout" onclick="showSqlSetup()" style="color:#555;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Setup Supabase SQL
+      </button>
       <button class="sout" onclick="doLogout()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         Terminar Sessão
@@ -1103,7 +1107,10 @@ function doLogin() {
 function startApp() {
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('app').style.display='block';
-  loadLocalData();
+  // Show cached data instantly while Supabase loads
+  loadLocalCache();
+  renderAll();
+  // Then fetch fresh data from Supabase
   load();
   startSync();
   showPage('dashboard', document.getElementById('btn-dashboard'));
@@ -1123,15 +1130,18 @@ window.addEventListener('load', () => {
   if (localStorage.getItem('spf_session') === '1') startApp();
 });
 
-// ══ LOCAL STORAGE ══
+// ══ LOCAL STORAGE (session only — fallback/cache) ══
 function saveLocalData() {
-  localStorage.setItem('spf_clients',    JSON.stringify(clients));
-  localStorage.setItem('spf_videos',     JSON.stringify(videos));
-  localStorage.setItem('spf_campaigns',  JSON.stringify(campaigns));
-  localStorage.setItem('spf_finances',   JSON.stringify(finances));
-  localStorage.setItem('spf_tasks',      JSON.stringify(tasks));
+  try {
+    localStorage.setItem('spf_clients',    JSON.stringify(clients));
+    localStorage.setItem('spf_videos',     JSON.stringify(videos));
+    localStorage.setItem('spf_campaigns',  JSON.stringify(campaigns));
+    localStorage.setItem('spf_finances',   JSON.stringify(finances));
+    localStorage.setItem('spf_tasks',      JSON.stringify(tasks));
+    localStorage.setItem('spf_fixed_expenses', JSON.stringify(fixedExpenses));
+  } catch(e) {}
 }
-function loadLocalData() {
+function loadLocalCache() {
   try { clients   = JSON.parse(localStorage.getItem('spf_clients')   || '[]'); } catch(e){clients=[];}
   try { videos    = JSON.parse(localStorage.getItem('spf_videos')    || '[]'); } catch(e){videos=[];}
   try { campaigns = JSON.parse(localStorage.getItem('spf_campaigns') || '[]'); } catch(e){campaigns=[];}
@@ -1151,14 +1161,71 @@ async function sb(path, opts={}) {
   return txt ? JSON.parse(txt) : null;
 }
 
+// Generic upsert: send full array to Supabase, replacing all rows for this table
+async function sbSave(table, data) {
+  try {
+    // Delete all + re-insert is safest for small datasets
+    await sb(`/rest/v1/${table}?id=not.is.null`, { method:'DELETE' });
+    if (data.length) {
+      await sb(`/rest/v1/${table}`, {
+        method:'POST',
+        headers:{'Prefer':'return=minimal'},
+        body: JSON.stringify(data)
+      });
+    }
+  } catch(e) { console.error('sbSave error',table,e); }
+}
+
+async function sbLoad(table) {
+  try {
+    const data = await sb(`/rest/v1/${table}?select=*&order=created_at.asc`);
+    return data || [];
+  } catch(e) { console.error('sbLoad error',table,e); return null; }
+}
+
+// ── Main load: leads + all app data ──
 async function load() {
+  showLoadingIndicator(true);
+  // Load leads from Supabase
   try {
     const data = await sb('/rest/v1/leads?select=*&order=created_at.desc');
     leads = (data||[]).map(l=>({status:l.status||'Novo',notes:l.notes||'',...l}));
     lastCount = leads.length;
-    renderAll();
-  } catch(e) { console.error('Erro ao carregar:',e); }
+  } catch(e) { console.error('Leads load error:',e); }
+
+  // Load all other tables
+  const tables = ['spf_clients','spf_videos','spf_campaigns','spf_finances','spf_tasks','spf_fixed_expenses'];
+  const [cl,vi,ca,fi,ta,fe] = await Promise.all(tables.map(t=>sbLoad(t)));
+
+  if (cl !== null) { clients = cl; saveLocalData(); }
+  if (vi !== null) { videos = vi; saveLocalData(); }
+  if (ca !== null) { campaigns = ca; saveLocalData(); }
+  if (fi !== null) { finances = fi; saveLocalData(); }
+  if (ta !== null) { tasks = ta; saveLocalData(); }
+  if (fe !== null) { fixedExpenses = fe; saveLocalData(); }
+
+  showLoadingIndicator(false);
+  renderAll();
+  renderDash();
 }
+
+function showLoadingIndicator(on) {
+  let el = document.getElementById('globalLoader');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'globalLoader';
+    el.style.cssText = 'position:fixed;top:0;left:0;right:0;height:3px;background:var(--red);z-index:9999;transition:opacity .4s;';
+    document.body.appendChild(el);
+  }
+  el.style.opacity = on ? '1' : '0';
+}
+
+// ── Persist to Supabase + local cache ──
+async function persist(table, arr) {
+  saveLocalData(); // instant local cache
+  await sbSave(table, arr);
+}
+
 async function updateLead(id,fields) {
   try { await sb('/rest/v1/leads?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(fields)}); } catch(e){}
 }
@@ -1173,17 +1240,28 @@ async function clearAll() {
 }
 function renderAll() { renderStats(); renderTable(); updateBadge(); renderDash(); }
 
-// ══ AUTO-SYNC ══
+// ══ AUTO-SYNC (every 20s — pulls all tables) ══
 function startSync() {
   window._sync = setInterval(async()=>{
     try {
+      // Sync leads
       const data = await sb('/rest/v1/leads?select=*&order=created_at.desc');
       const fresh=(data||[]).map(l=>({status:l.status||'Novo',notes:l.notes||'',...l}));
       if (fresh.length > lastCount) showToast(fresh[0].name,fresh[0].phone);
       leads=fresh; lastCount=leads.length; renderAll();
+      // Sync app tables
+      const tables = ['spf_clients','spf_videos','spf_campaigns','spf_finances','spf_tasks','spf_fixed_expenses'];
+      const [cl,vi,ca,fi,ta,fe] = await Promise.all(tables.map(t=>sbLoad(t)));
+      if(cl!==null)clients=cl;
+      if(vi!==null)videos=vi;
+      if(ca!==null)campaigns=ca;
+      if(fi!==null)finances=fi;
+      if(ta!==null)tasks=ta;
+      if(fe!==null)fixedExpenses=fe;
+      saveLocalData();
     } catch(e){}
     document.getElementById('syncTime').textContent='Sync: '+new Date().toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  }, 15000);
+  }, 20000);
 }
 function showToast(name,phone) {
   document.getElementById('toastInfo').textContent=name+' · '+phone;
@@ -1431,7 +1509,7 @@ function autoAdvanceRenewals() {
       }
     }
   });
-  if (changed) saveLocalData();
+  if (changed) { saveLocalData(); persist('spf_clients', clients); }
 }
 
 function renderClients() {
@@ -1527,9 +1605,9 @@ function saveClient() {
   };
   if (!c.name) { alert('Nome obrigatório.'); return; }
   if (editClientIdx !== null) clients[editClientIdx] = c; else clients.unshift(c);
-  saveLocalData(); closeClientModal(); renderClients();
+  closeClientModal(); renderClients(); persist('spf_clients', clients);
 }
-function deleteClient(i) { if (!confirm('Eliminar cliente?')) return; clients.splice(i, 1); saveLocalData(); renderClients(); }
+function deleteClient(i) { if (!confirm('Eliminar cliente?')) return; clients.splice(i, 1); renderClients(); persist('spf_clients', clients); }
 document.getElementById('clientModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeClientModal(); });
 
 // ── Notificação por email (mailto) ──
@@ -1619,7 +1697,7 @@ function autoStatusVideos() {
       if (dt <= now) { v.status = 'Live'; changed = true; }
     }
   });
-  if (changed) saveLocalData();
+  if (changed) { saveLocalData(); persist('spf_videos', videos); }
 }
 
 function renderVideos() {
@@ -1667,12 +1745,12 @@ function closeVideoModal(){document.getElementById('videoModal').classList.remov
 function saveVideo(){
   const v={title:document.getElementById('v-title').value.trim(),status:document.getElementById('v-status').value,
     date:document.getElementById('v-date').value,time:document.getElementById('v-time').value,
-    desc:document.getElementById('v-desc').value,cover:coverDataURL||null,id:Date.now()};
+    desc:document.getElementById('v-desc').value,cover:coverDataURL||null,created_at:new Date().toISOString(),id:Date.now()};
   if(!v.title){alert('Título obrigatório.');return;}
   if(editVideoIdx!==null) videos[editVideoIdx]=v; else videos.unshift(v);
-  saveLocalData(); closeVideoModal(); renderVideos(); renderCal();
+  closeVideoModal(); renderVideos(); renderCal(); persist('spf_videos', videos);
 }
-function deleteVideo(i){if(!confirm('Eliminar vídeo?'))return;videos.splice(i,1);saveLocalData();renderVideos();renderCal();}
+function deleteVideo(i){if(!confirm('Eliminar vídeo?'))return;videos.splice(i,1);renderVideos();renderCal();persist('spf_videos',videos);}
 document.getElementById('videoModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeVideoModal();});
 
 // ══ CALENDAR ══
@@ -1905,12 +1983,12 @@ function saveCampaign(){
     status:document.getElementById('camp-status').value,date:document.getElementById('camp-date').value,
     objective:document.getElementById('camp-obj').value,budget:document.getElementById('camp-budget').value,
     budgetType:campBudgetType,notes:document.getElementById('camp-notes').value,
-    adsets:JSON.parse(JSON.stringify(currentAdsets)),id:Date.now()};
+    adsets:JSON.parse(JSON.stringify(currentAdsets)),created_at:new Date().toISOString(),id:Date.now()};
   if(!c.name){alert('Nome obrigatório.');return;}
   if(editCampIdx!==null) campaigns[editCampIdx]=c; else campaigns.unshift(c);
-  saveLocalData(); closeCampaignModal(); renderCampaigns();
+  closeCampaignModal(); renderCampaigns(); persist('spf_campaigns', campaigns);
 }
-function deleteCampaign(i){if(!confirm('Eliminar campanha?'))return;campaigns.splice(i,1);saveLocalData();renderCampaigns();}
+function deleteCampaign(i){if(!confirm('Eliminar campanha?'))return;campaigns.splice(i,1);renderCampaigns();persist('spf_campaigns',campaigns);}
 document.getElementById('campaignModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeCampaignModal();});
 
 // ── Auto-status: Ready→Live for campaigns ──
@@ -1922,7 +2000,7 @@ function autoStatusCampaigns() {
       if(d<=now){c.status='Live';changed=true;}
     }
   });
-  if(changed)saveLocalData();
+  if(changed){saveLocalData();persist('spf_campaigns',campaigns);}
 }
 
 // ══ FINANCES ══
@@ -2033,13 +2111,12 @@ function saveFixedExp(){
   const fe={name:document.getElementById('fe-name').value.trim(),value:document.getElementById('fe-value').value,
     start:document.getElementById('fe-start').value,cat:document.getElementById('fe-cat').value,
     recur:document.getElementById('fe-recur').value,end:document.getElementById('fe-end').value,
-    notes:document.getElementById('fe-notes').value,id:Date.now()};
+    notes:document.getElementById('fe-notes').value,created_at:new Date().toISOString(),id:Date.now()};
   if(!fe.name||!fe.value){alert('Nome e valor obrigatórios.');return;}
   if(editFixedExpIdx!==null) fixedExpenses[editFixedExpIdx]=fe; else fixedExpenses.push(fe);
-  localStorage.setItem('spf_fixed_expenses',JSON.stringify(fixedExpenses));
-  closeFixedExpModal(); renderFixedExpenses(); renderFinances();
+  closeFixedExpModal(); renderFixedExpenses(); renderFinances(); persist('spf_fixed_expenses', fixedExpenses);
 }
-function deleteFixedExp(i){if(!confirm('Eliminar gasto fixo?'))return;fixedExpenses.splice(i,1);localStorage.setItem('spf_fixed_expenses',JSON.stringify(fixedExpenses));renderFixedExpenses();renderFinances();}
+function deleteFixedExp(i){if(!confirm('Eliminar gasto fixo?'))return;fixedExpenses.splice(i,1);renderFixedExpenses();renderFinances();persist('spf_fixed_expenses',fixedExpenses);}
 document.getElementById('fixedExpModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeFixedExpModal();});
 
 function openFinanceModal(i=null){
@@ -2059,12 +2136,12 @@ function closeFinanceModal(){document.getElementById('financeModal').classList.r
 function saveFinance(){
   const f={date:document.getElementById('fin-date').value,type:document.getElementById('fin-entry-type').value,
     desc:document.getElementById('fin-desc').value.trim(),cat:document.getElementById('fin-cat').value,
-    value:document.getElementById('fin-value').value,id:Date.now()};
+    value:document.getElementById('fin-value').value,created_at:new Date().toISOString(),id:Date.now()};
   if(!f.desc||!f.value){alert('Preenche descrição e valor.');return;}
   if(editFinIdx!==null) finances[editFinIdx]=f; else finances.unshift(f);
-  saveLocalData(); closeFinanceModal(); renderFinances();
+  closeFinanceModal(); renderFinances(); persist('spf_finances', finances);
 }
-function deleteFinance(i){if(!confirm('Eliminar lançamento?'))return;finances.splice(i,1);saveLocalData();renderFinances();}
+function deleteFinance(i){if(!confirm('Eliminar lançamento?'))return;finances.splice(i,1);renderFinances();persist('spf_finances',finances);}
 function exportFinCSV(){
   const hdr=['Data','Descrição','Categoria','Tipo','Valor'];
   const rows=finances.map(f=>[f.date,f.desc,f.cat,f.type,f.value].map(v=>'"'+(v||'').toString().replace(/"/g,'""')+'"').join(','));
@@ -2081,7 +2158,7 @@ function cleanExpiredTasks() {
   const now = Date.now();
   const before = tasks.length;
   tasks = tasks.filter(t => !(t.completedAt && (now - t.completedAt) >= 24*60*60*1000));
-  if (tasks.length !== before) saveLocalData();
+  if (tasks.length !== before) { saveLocalData(); persist('spf_tasks', tasks); }
 }
 
 function toggleTaskDone(ti, evt) {
@@ -2093,12 +2170,12 @@ function toggleTaskDone(ti, evt) {
     t.col = 'done';
     t.completedAt = Date.now();
     item.classList.add('completing');
-    saveLocalData();
+    saveLocalData(); persist('spf_tasks', tasks);
     setTimeout(() => renderTasks(), 600);
   } else {
     t.col = 'todo';
     t.completedAt = null;
-    saveLocalData();
+    saveLocalData(); persist('spf_tasks', tasks);
     renderTasks();
   }
 }
@@ -2157,12 +2234,12 @@ function closeTaskModal(){document.getElementById('taskModal').classList.remove(
 function saveTask(){
   const t={name:document.getElementById('task-name').value.trim(),assign:document.getElementById('task-assign').value.trim(),
     due:document.getElementById('task-due').value,col:document.getElementById('task-col').value,
-    prio:document.getElementById('task-prio').value,id:Date.now()};
+    prio:document.getElementById('task-prio').value,created_at:new Date().toISOString(),id:Date.now()};
   if(!t.name){alert('Nome da tarefa obrigatório.');return;}
   if(editTaskIdx!==null){t.completedAt=tasks[editTaskIdx].completedAt||null; tasks[editTaskIdx]=t;} else tasks.push(t);
-  saveLocalData(); closeTaskModal(); renderTasks();
+  closeTaskModal(); renderTasks(); persist('spf_tasks', tasks);
 }
-function deleteTask(i){if(!confirm('Eliminar tarefa?'))return;tasks.splice(i,1);saveLocalData();renderTasks();}
+function deleteTask(i){if(!confirm('Eliminar tarefa?'))return;tasks.splice(i,1);renderTasks();persist('spf_tasks',tasks);}
 document.getElementById('taskModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeTaskModal();});
 
 // ══ FLATPICKR DATE PICKERS ══
@@ -2201,5 +2278,88 @@ function toggleSidebar(){document.getElementById('sidebar').classList.toggle('op
   document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}});
 });
 </script>
-</body>
-</html>
+<!-- SQL SETUP MODAL -->
+<div class="mov" id="sqlModal">
+  <div class="mbox" style="width:640px;">
+    <button class="mclose" onclick="document.getElementById('sqlModal').classList.remove('open');document.body.style.overflow='';">✕</button>
+    <div class="mtitle">⚙️ Setup Supabase</div>
+    <div style="font-size:13px;color:var(--sub);margin-bottom:14px;">Copia este SQL e executa-o no <strong style="color:var(--text);">Supabase → SQL Editor</strong> do teu projeto. Só precisas de fazer isto <strong style="color:var(--text);">uma vez</strong>.</div>
+    <div style="position:relative;">
+      <textarea id="sqlCode" readonly style="width:100%;height:340px;background:#0a0a0a;border:1px solid rgba(255,0,0,.2);border-radius:8px;padding:14px;color:#4ade80;font-family:monospace;font-size:11px;resize:none;outline:none;line-height:1.6;"></textarea>
+      <button onclick="copySql()" style="position:absolute;top:8px;right:8px;background:rgba(255,0,0,.12);border:1px solid rgba(255,0,0,.3);border-radius:6px;padding:5px 12px;color:var(--red);font-size:11px;font-weight:700;cursor:pointer;" id="copySqlBtn">📋 Copiar</button>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:#555;">Após executar, os dados ficam sincronizados entre todos os dispositivos automaticamente.</div>
+  </div>
+</div>
+
+<script>
+const SQL_SETUP = `-- StayPerfit Admin — Supabase Tables Setup
+-- Executa no Supabase SQL Editor (uma vez apenas)
+
+create table if not exists spf_clients (
+  id bigint primary key,
+  name text, contact text, email text,
+  billing text, price text, start text, renew text,
+  pay text, notes text,
+  created_at timestamptz default now()
+);
+
+create table if not exists spf_videos (
+  id bigint primary key,
+  title text, status text, date text, time text,
+  desc text, cover text,
+  created_at timestamptz default now()
+);
+
+create table if not exists spf_campaigns (
+  id bigint primary key,
+  name text, platform text, status text, date text,
+  objective text, budget text, budget_type text,
+  notes text, adsets jsonb,
+  created_at timestamptz default now()
+);
+
+create table if not exists spf_finances (
+  id bigint primary key,
+  date text, type text, desc text, cat text, value text,
+  created_at timestamptz default now()
+);
+
+create table if not exists spf_tasks (
+  id bigint primary key,
+  name text, assign text, due text, col text,
+  prio text, completed_at bigint,
+  created_at timestamptz default now()
+);
+
+create table if not exists spf_fixed_expenses (
+  id bigint primary key,
+  name text, value text, start text, cat text,
+  recur text, "end" text, notes text,
+  created_at timestamptz default now()
+);
+
+-- Allow public read/write (RLS off — painel privado por password)
+alter table spf_clients disable row level security;
+alter table spf_videos disable row level security;
+alter table spf_campaigns disable row level security;
+alter table spf_finances disable row level security;
+alter table spf_tasks disable row level security;
+alter table spf_fixed_expenses disable row level security;`;
+
+function showSqlSetup() {
+  document.getElementById('sqlCode').value = SQL_SETUP;
+  document.getElementById('sqlModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function copySql() {
+  navigator.clipboard.writeText(SQL_SETUP).then(() => {
+    const b = document.getElementById('copySqlBtn');
+    b.textContent = '✅ Copiado!';
+    setTimeout(() => b.textContent = '📋 Copiar', 2000);
+  });
+}
+document.getElementById('sqlModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) { e.currentTarget.classList.remove('open'); document.body.style.overflow = ''; }
+});
+</script>
