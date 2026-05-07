@@ -1499,6 +1499,7 @@ function openClientModal(i = null) {
   document.getElementById('clientModal').classList.add('open');
   document.body.style.overflow = 'hidden';
   setTimeout(initDatePickers, 50);
+}
 function closeClientModal() { document.getElementById('clientModal').classList.remove('open'); document.body.style.overflow = ''; }
 
 function saveClient() {
