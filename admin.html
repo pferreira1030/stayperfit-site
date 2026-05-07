@@ -416,7 +416,10 @@ tr.row-cancelado{background:rgba(168,85,247,.04) !important;}
       </button>
     </div>
     <div class="sbottom">
-      <div class="sbottom-info">Auto-atualiza a cada 15s<span id="syncTime" style="display:block;margin-top:2px;color:#383838;"></span></div>
+      <div class="sbottom-info">
+        <span id="syncDot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#333;margin-right:5px;vertical-align:middle;transition:background .3s;"></span>
+        <span id="syncTime" style="color:#444;font-size:10px;">A sincronizar…</span>
+      </div>
       <button class="sout" onclick="showSqlSetup()" style="color:#555;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         Setup Supabase SQL
@@ -1161,24 +1164,29 @@ async function sb(path, opts={}) {
   return txt ? JSON.parse(txt) : null;
 }
 
-// Generic upsert: send full array to Supabase, replacing all rows for this table
+// Persist to Supabase: upsert all rows, then delete removed ones
 async function sbSave(table, data) {
   try {
-    // Delete all + re-insert is safest for small datasets
-    await sb(`/rest/v1/${table}?id=not.is.null`, { method:'DELETE' });
     if (data.length) {
+      // Upsert all current rows
       await sb(`/rest/v1/${table}`, {
-        method:'POST',
-        headers:{'Prefer':'return=minimal'},
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
         body: JSON.stringify(data)
       });
+      // Delete rows no longer in the array
+      const ids = data.map(r => r.id).join(',');
+      await sb(`/rest/v1/${table}?id=not.in.(${ids})`, { method: 'DELETE' });
+    } else {
+      // Array is empty — delete everything
+      await sb(`/rest/v1/${table}?id=not.is.null`, { method: 'DELETE' });
     }
-  } catch(e) { console.error('sbSave error',table,e); }
+  } catch(e) { console.error('sbSave error', table, e); }
 }
 
 async function sbLoad(table) {
   try {
-    const data = await sb(`/rest/v1/${table}?select=*&order=created_at.asc`);
+    const data = await sb(`/rest/v1/${table}?select=*&order=id.asc`);
     return data || [];
   } catch(e) { console.error('sbLoad error',table,e); return null; }
 }
@@ -1242,26 +1250,49 @@ function renderAll() { renderStats(); renderTable(); updateBadge(); renderDash()
 
 // ══ AUTO-SYNC (every 20s — pulls all tables) ══
 function startSync() {
-  window._sync = setInterval(async()=>{
-    try {
-      // Sync leads
-      const data = await sb('/rest/v1/leads?select=*&order=created_at.desc');
-      const fresh=(data||[]).map(l=>({status:l.status||'Novo',notes:l.notes||'',...l}));
-      if (fresh.length > lastCount) showToast(fresh[0].name,fresh[0].phone);
-      leads=fresh; lastCount=leads.length; renderAll();
-      // Sync app tables
-      const tables = ['spf_clients','spf_videos','spf_campaigns','spf_finances','spf_tasks','spf_fixed_expenses'];
-      const [cl,vi,ca,fi,ta,fe] = await Promise.all(tables.map(t=>sbLoad(t)));
-      if(cl!==null)clients=cl;
-      if(vi!==null)videos=vi;
-      if(ca!==null)campaigns=ca;
-      if(fi!==null)finances=fi;
-      if(ta!==null)tasks=ta;
-      if(fe!==null)fixedExpenses=fe;
-      saveLocalData();
-    } catch(e){}
-    document.getElementById('syncTime').textContent='Sync: '+new Date().toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  }, 20000);
+  window._sync = setInterval(syncAll, 8000);
+}
+
+async function syncAll() {
+  try {
+    // Sync leads
+    const data = await sb('/rest/v1/leads?select=*&order=created_at.desc');
+    const fresh=(data||[]).map(l=>({status:l.status||'Novo',notes:l.notes||'',...l}));
+    if (fresh.length > lastCount) showToast(fresh[0].name,fresh[0].phone);
+    leads=fresh; lastCount=leads.length;
+
+    // Sync all app tables in parallel
+    const tables = ['spf_clients','spf_videos','spf_campaigns','spf_finances','spf_tasks','spf_fixed_expenses'];
+    const [cl,vi,ca,fi,ta,fe] = await Promise.all(tables.map(t=>sbLoad(t)));
+    if(cl!==null)clients=cl;
+    if(vi!==null)videos=vi;
+    if(ca!==null)campaigns=ca;
+    if(fi!==null)finances=fi;
+    if(ta!==null)tasks=ta;
+    if(fe!==null)fixedExpenses=fe;
+    saveLocalData();
+
+    // Re-render the currently visible page
+    renderActivePage();
+  } catch(e){ console.warn('Sync error:',e); }
+  const dot = document.getElementById('syncDot');
+  const st = document.getElementById('syncTime');
+  if (dot) { dot.style.background='var(--green)'; setTimeout(()=>dot.style.background='#333',2000); }
+  if (st) st.textContent='Sync: '+new Date().toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+function renderActivePage() {
+  const active = document.querySelector('.page.active');
+  if (!active) return;
+  const id = active.id.replace('page-','');
+  if (id==='dashboard') { renderAll(); renderDash(); }
+  else if (id==='leads')     renderAll();
+  else if (id==='clients')   renderClients();
+  else if (id==='videos')    renderVideos();
+  else if (id==='calendar')  renderCal();
+  else if (id==='campaigns') renderCampaigns();
+  else if (id==='finances')  renderFinances();
+  else if (id==='tasks')     renderTasks();
 }
 function showToast(name,phone) {
   document.getElementById('toastInfo').textContent=name+' · '+phone;
@@ -2294,52 +2325,47 @@ function toggleSidebar(){document.getElementById('sidebar').classList.toggle('op
 
 <script>
 const SQL_SETUP = `-- StayPerfit Admin — Supabase Tables Setup
--- Executa no Supabase SQL Editor (uma vez apenas)
+-- Cola no SQL Editor do Supabase e clica RUN (só uma vez)
 
 create table if not exists spf_clients (
   id bigint primary key,
   name text, contact text, email text,
-  billing text, price text, start text, renew text,
-  pay text, notes text,
-  created_at timestamptz default now()
+  billing text, price text, "start" text, renew text,
+  pay text, notes text, created_at text
 );
 
 create table if not exists spf_videos (
   id bigint primary key,
-  title text, status text, date text, time text,
-  desc text, cover text,
-  created_at timestamptz default now()
+  title text, status text, date text, "time" text,
+  "desc" text, cover text, created_at text
 );
 
 create table if not exists spf_campaigns (
   id bigint primary key,
   name text, platform text, status text, date text,
-  objective text, budget text, budget_type text,
-  notes text, adsets jsonb,
-  created_at timestamptz default now()
+  objective text, budget text, "budgetType" text,
+  notes text, adsets jsonb, created_at text
 );
 
 create table if not exists spf_finances (
   id bigint primary key,
-  date text, type text, desc text, cat text, value text,
-  created_at timestamptz default now()
+  date text, type text, "desc" text, cat text,
+  value text, created_at text
 );
 
 create table if not exists spf_tasks (
   id bigint primary key,
   name text, assign text, due text, col text,
-  prio text, completed_at bigint,
-  created_at timestamptz default now()
+  prio text, "completedAt" bigint, created_at text
 );
 
 create table if not exists spf_fixed_expenses (
   id bigint primary key,
-  name text, value text, start text, cat text,
-  recur text, "end" text, notes text,
-  created_at timestamptz default now()
+  name text, value text, "start" text, cat text,
+  recur text, "end" text, notes text, created_at text
 );
 
--- Allow public read/write (RLS off — painel privado por password)
+-- Desativar RLS (painel protegido por password)
 alter table spf_clients disable row level security;
 alter table spf_videos disable row level security;
 alter table spf_campaigns disable row level security;
