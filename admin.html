@@ -1164,21 +1164,21 @@ async function sb(path, opts={}) {
   return txt ? JSON.parse(txt) : null;
 }
 
-// Persist to Supabase: upsert all rows, then delete removed ones
+// ── Supabase save/load ──
+let _saving = false; // lock: block sync while saving
+
 async function sbSave(table, data) {
   try {
     if (data.length) {
-      // Upsert all current rows
       await sb(`/rest/v1/${table}`, {
         method: 'POST',
         headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
         body: JSON.stringify(data)
       });
-      // Delete rows no longer in the array
+      // Remove rows deleted locally
       const ids = data.map(r => r.id).join(',');
       await sb(`/rest/v1/${table}?id=not.in.(${ids})`, { method: 'DELETE' });
     } else {
-      // Array is empty — delete everything
       await sb(`/rest/v1/${table}?id=not.is.null`, { method: 'DELETE' });
     }
   } catch(e) { console.error('sbSave error', table, e); }
@@ -1188,30 +1188,61 @@ async function sbLoad(table) {
   try {
     const data = await sb(`/rest/v1/${table}?select=*&order=id.asc`);
     return data || [];
-  } catch(e) { console.error('sbLoad error',table,e); return null; }
+  } catch(e) { console.error('sbLoad error', table, e); return null; }
 }
 
-// ── Main load: leads + all app data ──
+// ── Persist: save locally + push to Supabase, block sync during save ──
+async function persist(table, arr) {
+  _saving = true;
+  saveLocalData();
+  await sbSave(table, arr);
+  _saving = false;
+}
+
+// ── Initial load: prefer Supabase, fallback to localStorage cache ──
 async function load() {
   showLoadingIndicator(true);
-  // Load leads from Supabase
   try {
     const data = await sb('/rest/v1/leads?select=*&order=created_at.desc');
     leads = (data||[]).map(l=>({status:l.status||'Novo',notes:l.notes||'',...l}));
     lastCount = leads.length;
-  } catch(e) { console.error('Leads load error:',e); }
+  } catch(e) { console.error('Leads load error:', e); }
 
-  // Load all other tables
-  const tables = ['spf_clients','spf_videos','spf_campaigns','spf_finances','spf_tasks','spf_fixed_expenses'];
-  const [cl,vi,ca,fi,ta,fe] = await Promise.all(tables.map(t=>sbLoad(t)));
-
-  if (cl !== null) { clients = cl; saveLocalData(); }
-  if (vi !== null) { videos = vi; saveLocalData(); }
-  if (ca !== null) { campaigns = ca; saveLocalData(); }
-  if (fi !== null) { finances = fi; saveLocalData(); }
-  if (ta !== null) { tasks = ta; saveLocalData(); }
-  if (fe !== null) { fixedExpenses = fe; saveLocalData(); }
-
+  const tableMap = [
+    ['spf_clients', 'clients'],
+    ['spf_videos', 'videos'],
+    ['spf_campaigns', 'campaigns'],
+    ['spf_finances', 'finances'],
+    ['spf_tasks', 'tasks'],
+    ['spf_fixed_expenses', 'fixedExpenses'],
+  ];
+  const results = await Promise.all(tableMap.map(([t]) => sbLoad(t)));
+  let anyData = false;
+  const setVar2 = (name, val) => {
+    if (name==='clients') clients=val;
+    else if (name==='videos') videos=val;
+    else if (name==='campaigns') campaigns=val;
+    else if (name==='finances') finances=val;
+    else if (name==='tasks') tasks=val;
+    else if (name==='fixedExpenses') fixedExpenses=val;
+  };
+  const localKey = (name) => 'spf_' + (name==='fixedExpenses'?'fixed_expenses':name);
+  tableMap.forEach(([tableName, varName], i) => {
+    const res = results[i];
+    if (res !== null && res.length > 0) {
+      setVar2(varName, res);
+    } else if (res !== null && res.length === 0) {
+      // Supabase empty — check if local has data to push up
+      try {
+        const local = JSON.parse(localStorage.getItem(localKey(varName)) || '[]');
+        if (local.length > 0) {
+          setVar2(varName, local);
+          sbSave(tableName, local);
+        }
+      } catch(e) {}
+    }
+  });
+  saveLocalData();
   showLoadingIndicator(false);
   renderAll();
   renderDash();
@@ -1226,12 +1257,6 @@ function showLoadingIndicator(on) {
     document.body.appendChild(el);
   }
   el.style.opacity = on ? '1' : '0';
-}
-
-// ── Persist to Supabase + local cache ──
-async function persist(table, arr) {
-  saveLocalData(); // instant local cache
-  await sbSave(table, arr);
 }
 
 async function updateLead(id,fields) {
@@ -1254,6 +1279,9 @@ function startSync() {
 }
 
 async function syncAll() {
+  // Don't sync while a save is in progress — would overwrite unsaved data
+  if (_saving) return;
+
   try {
     // Sync leads
     const data = await sb('/rest/v1/leads?select=*&order=created_at.desc');
@@ -1261,20 +1289,50 @@ async function syncAll() {
     if (fresh.length > lastCount) showToast(fresh[0].name,fresh[0].phone);
     leads=fresh; lastCount=leads.length;
 
-    // Sync all app tables in parallel
-    const tables = ['spf_clients','spf_videos','spf_campaigns','spf_finances','spf_tasks','spf_fixed_expenses'];
-    const [cl,vi,ca,fi,ta,fe] = await Promise.all(tables.map(t=>sbLoad(t)));
-    if(cl!==null)clients=cl;
-    if(vi!==null)videos=vi;
-    if(ca!==null)campaigns=ca;
-    if(fi!==null)finances=fi;
-    if(ta!==null)tasks=ta;
-    if(fe!==null)fixedExpenses=fe;
-    saveLocalData();
+    // Sync app tables — only update local if Supabase has data
+    const tableMap = [
+      ['spf_clients', 'clients'],
+      ['spf_videos', 'videos'],
+      ['spf_campaigns', 'campaigns'],
+      ['spf_finances', 'finances'],
+      ['spf_tasks', 'tasks'],
+      ['spf_fixed_expenses', 'fixedExpenses'],
+    ];
+    const results = await Promise.all(tableMap.map(([t]) => sbLoad(t)));
+    let changed = false;
+    const setVar = (name, val) => {
+      if (name==='clients') clients=val;
+      else if (name==='videos') videos=val;
+      else if (name==='campaigns') campaigns=val;
+      else if (name==='finances') finances=val;
+      else if (name==='tasks') tasks=val;
+      else if (name==='fixedExpenses') fixedExpenses=val;
+    };
+    const getLen = (name) => {
+      if (name==='clients') return clients.length;
+      if (name==='videos') return videos.length;
+      if (name==='campaigns') return campaigns.length;
+      if (name==='finances') return finances.length;
+      if (name==='tasks') return tasks.length;
+      if (name==='fixedExpenses') return fixedExpenses.length;
+      return 0;
+    };
+    tableMap.forEach(([, varName], i) => {
+      const res = results[i];
+      // Never overwrite local data with empty from Supabase
+      if (res !== null && res.length > 0) {
+        setVar(varName, res);
+        changed = true;
+      } else if (res !== null && res.length === 0 && getLen(varName) === 0) {
+        // Both empty — no change needed
+      }
+    });
+    if (changed) saveLocalData();
 
-    // Re-render the currently visible page
+    // Re-render visible page
     renderActivePage();
-  } catch(e){ console.warn('Sync error:',e); }
+  } catch(e){ console.warn('Sync error:', e); }
+
   const dot = document.getElementById('syncDot');
   const st = document.getElementById('syncTime');
   if (dot) { dot.style.background='var(--green)'; setTimeout(()=>dot.style.background='#333',2000); }
