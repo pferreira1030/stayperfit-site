@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>StayPerfit — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 <style>
 :root {
   --bg:#080808; --surface:#0f0f0f; --s2:#141414; --border:rgba(255,255,255,.07);
@@ -280,12 +283,65 @@ td.tp a:hover{color:var(--green);}
 .mtlogo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--red);}
 .mhbg{background:none;border:none;cursor:pointer;color:var(--text);padding:6px;}
 
-/* cover upload */
-.cover-upload{border:2px dashed rgba(255,255,255,.1);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.02);}
-.cover-upload:hover{border-color:rgba(255,0,0,.3);background:rgba(255,0,0,.03);}
-.cover-upload input{display:none;}
-.cover-preview{width:100%;max-height:180px;object-fit:cover;border-radius:8px;display:none;margin-top:10px;}
-.cover-upload-lbl{font-size:12px;color:var(--sub);margin-top:6px;}
+/* ─── FLATPICKR DARK THEME ─── */
+.flatpickr-calendar{background:var(--surface)!important;border:1px solid rgba(255,0,0,.2)!important;box-shadow:0 8px 32px rgba(0,0,0,.6)!important;border-radius:12px!important;font-family:'DM Sans',sans-serif!important;}
+.flatpickr-day{color:var(--text)!important;border-radius:6px!important;}
+.flatpickr-day:hover{background:rgba(255,0,0,.12)!important;border-color:transparent!important;}
+.flatpickr-day.selected,.flatpickr-day.selected:hover{background:var(--red)!important;border-color:var(--red)!important;color:#000!important;}
+.flatpickr-day.today{border-color:var(--red)!important;}
+.flatpickr-day.flatpickr-disabled,.flatpickr-day.prevMonthDay,.flatpickr-day.nextMonthDay{color:#333!important;}
+.flatpickr-months{background:transparent!important;padding:8px 0 4px!important;}
+.flatpickr-month{color:var(--text)!important;fill:var(--text)!important;}
+.flatpickr-current-month input.cur-year{color:var(--text)!important;}
+.flatpickr-current-month .flatpickr-monthDropdown-months{background:var(--surface)!important;color:var(--text)!important;}
+.flatpickr-weekday{color:var(--sub)!important;font-weight:700!important;}
+.flatpickr-weekdays{background:transparent!important;}
+.numInputWrapper span{border-color:rgba(255,255,255,.1)!important;}
+.numInputWrapper span:hover{background:rgba(255,0,0,.1)!important;}
+.numInputWrapper input{color:var(--text)!important;}
+.flatpickr-time input{color:var(--text)!important;background:transparent!important;}
+.flatpickr-time .flatpickr-am-pm{color:var(--text)!important;}
+.flatpickr-time input:hover,.flatpickr-time .flatpickr-am-pm:hover{background:rgba(255,0,0,.08)!important;}
+
+/* ─── TASK CHECKBOX ─── */
+.task-check-wrap{display:flex;align-items:flex-start;gap:10px;}
+.task-checkbox{width:18px;height:18px;border-radius:5px;border:2px solid rgba(255,255,255,.18);background:transparent;cursor:pointer;appearance:none;flex-shrink:0;margin-top:1px;transition:all .2s;position:relative;}
+.task-checkbox:checked{background:var(--green);border-color:var(--green);}
+.task-checkbox:checked::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#000;font-size:11px;font-weight:900;}
+.task-item.completing{opacity:.5;text-decoration:line-through;transition:opacity .5s;}
+.task-deleting-badge{font-size:9px;color:var(--sub);background:rgba(255,255,255,.04);border-radius:4px;padding:2px 6px;margin-left:6px;}
+
+.camp-tab{background:none;border:none;border-bottom:2px solid transparent;padding:10px 18px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);transition:all .2s;}
+.camp-tab:hover{color:var(--text);}
+.camp-tab.active{color:var(--red);border-bottom-color:var(--red);}
+
+/* ─── ADSET ─── */
+.adset-block{background:var(--s2);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden;}
+.adset-hdr{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;}
+.adset-title{font-weight:700;font-size:13px;color:var(--text);flex:1;}
+.adset-body{padding:14px 16px;}
+.adset-section{margin-bottom:12px;}
+.adset-section-lbl{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);margin-bottom:6px;}
+.copy-item{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;}
+.copy-item textarea{flex:1;background:#111;border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:50px;outline:none;}
+.copy-item textarea:focus{border-color:rgba(255,0,0,.3);}
+.copy-item input{flex:1;background:#111;border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;}
+.copy-item input:focus{border-color:rgba(255,0,0,.3);}
+.rm-btn{background:none;border:none;cursor:pointer;color:#444;font-size:14px;padding:4px;flex-shrink:0;}
+.rm-btn:hover{color:var(--red);}
+.add-copy-btn{background:none;border:1px dashed rgba(255,255,255,.1);border-radius:6px;padding:6px 12px;color:var(--sub);cursor:pointer;font-size:11px;transition:all .18s;width:100%;}
+.add-copy-btn:hover{border-color:rgba(255,0,0,.3);color:var(--red);}
+.creative-thumb{width:60px;height:40px;object-fit:cover;border-radius:5px;cursor:pointer;}
+.creative-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text);margin-right:6px;margin-bottom:6px;}
+.creative-chip:hover{border-color:rgba(255,0,0,.3);}
+
+/* ─── CLIENT ROW COLORS ─── */
+.row-ativo td:first-child{border-left:3px solid var(--green);}
+.row-porpagar td:first-child{border-left:3px solid var(--yellow);}
+.row-cancelado td:first-child{border-left:3px solid var(--purple);}
+tr.row-porpagar{background:rgba(245,158,11,.04) !important;}
+tr.row-cancelado{background:rgba(168,85,247,.04) !important;}
+
 </style>
 </head>
 <body>
@@ -484,15 +540,42 @@ td.tp a:hover{color:var(--green);}
         <div class="ps">Planos, renovações e pagamentos</div>
       </div>
       <div class="sgrid" id="clients-stats"></div>
+
+      <!-- Revenue estimate + email notif banner -->
+      <div id="clients-revenue-banner" style="background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(34,197,94,.03));border:1px solid rgba(34,197,94,.18);border-radius:12px;padding:18px 24px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:4px;">Receita Estimada (clientes ativos)</div>
+          <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
+            <div><span style="font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:1px;color:var(--green);" id="est-monthly">0€</span><span style="font-size:11px;color:var(--sub);margin-left:6px;">/ mês</span></div>
+            <div style="width:1px;height:30px;background:var(--border);flex-shrink:0;"></div>
+            <div><span style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:#4ade80;" id="est-annual">0€</span><span style="font-size:11px;color:var(--sub);margin-left:6px;">/ ano</span></div>
+          </div>
+          <div style="font-size:11px;color:var(--sub);margin-top:4px;" id="est-breakdown"></div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sub);margin-bottom:8px;">Notificação Mensal por Email</div>
+          <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end;">
+            <input class="finp" type="email" id="notif-email" placeholder="pedro@exemplo.com" style="width:210px;padding:8px 12px;font-size:12px;">
+            <button class="tbtn tbtn-b" onclick="sendMonthlyReport()">📧 Enviar Resumo</button>
+          </div>
+          <div style="font-size:10px;color:#444;margin-top:5px;" id="notif-status"></div>
+        </div>
+      </div>
+
       <div class="card">
         <div class="ch">
-          <div class="ct">👤 Clientes Ativos</div>
+          <div class="ct">👤 Clientes</div>
           <div class="toolbar">
             <select class="fsel" id="filterClientStatus" onchange="renderClients()">
               <option value="">Todos</option>
-              <option value="Ativo">Ativo</option>
-              <option value="Por Pagar">Por Pagar</option>
-              <option value="Cancelado">Cancelado</option>
+              <option value="Ativo">✅ Ativo</option>
+              <option value="Por Pagar">⚠️ Por Pagar</option>
+              <option value="Cancelado">❌ Cancelado</option>
+            </select>
+            <select class="fsel" id="filterClientBilling" onchange="renderClients()">
+              <option value="">Todos os tipos</option>
+              <option value="Mensal">Mensal</option>
+              <option value="Trimestral">Trimestral</option>
             </select>
             <button class="tbtn tbtn-g" onclick="openClientModal()">+ Novo Cliente</button>
           </div>
@@ -500,7 +583,7 @@ td.tp a:hover{color:var(--green);}
         <div class="tw">
           <table>
             <thead><tr>
-              <th>Nome</th><th>Plano</th><th>Renovação</th><th>Estado Pagamento</th><th>Contacto</th><th></th>
+              <th>Nome</th><th>Tipo</th><th>Preço</th><th>Próx. Renovação</th><th>Estado</th><th>Contacto</th><th></th>
             </tr></thead>
             <tbody id="clients-tbody"></tbody>
           </table>
@@ -606,32 +689,61 @@ td.tp a:hover{color:var(--green);}
     <div class="page" id="page-finances">
       <div class="ph">
         <div class="pt">Finanças</div>
-        <div class="ps">Controlo de receitas e despesas</div>
+        <div class="ps">Controlo de receitas, despesas e gastos fixos</div>
       </div>
       <div class="fin-kpi" id="fin-kpis"></div>
-      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
-        <select class="fsel" id="fin-period" onchange="renderFinances()">
-          <option value="30">Últimos 30 dias</option>
-          <option value="7">Últimos 7 dias</option>
-          <option value="all">Todos</option>
-        </select>
-        <select class="fsel" id="fin-type" onchange="renderFinances()">
-          <option value="">Todos os tipos</option>
-          <option value="Receita">Receita</option>
-          <option value="Despesa">Despesa</option>
-        </select>
-        <button class="tbtn tbtn-g" onclick="openFinanceModal()">+ Novo Lançamento</button>
-        <button class="tbtn tbtn-b" onclick="exportFinCSV()">↓ CSV</button>
+      <!-- Tabs -->
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:18px;">
+        <button id="ftab-daily" class="camp-tab active" onclick="switchFinTab('daily')">📅 Fechos Diários</button>
+        <button id="ftab-fixed" class="camp-tab" onclick="switchFinTab('fixed')">📌 Gastos Fixos</button>
       </div>
-      <div class="card">
-        <div class="ch"><div class="ct">💰 Lançamentos</div></div>
-        <div class="tw">
-          <table class="fin-table">
-            <thead><tr>
-              <th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th><th></th>
-            </tr></thead>
-            <tbody id="fin-tbody"></tbody>
-          </table>
+      <!-- Daily tab -->
+      <div id="finTab-daily">
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+          <select class="fsel" id="fin-period" onchange="renderFinances()">
+            <option value="30">Últimos 30 dias</option>
+            <option value="7">Últimos 7 dias</option>
+            <option value="all">Todos</option>
+          </select>
+          <select class="fsel" id="fin-type" onchange="renderFinances()">
+            <option value="">Todos os tipos</option>
+            <option value="Receita">Receita</option>
+            <option value="Despesa">Despesa</option>
+          </select>
+          <button class="tbtn tbtn-g" onclick="openFinanceModal()">+ Novo Lançamento</button>
+          <button class="tbtn tbtn-b" onclick="exportFinCSV()">↓ CSV</button>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">💰 Lançamentos</div></div>
+          <div class="tw">
+            <table class="fin-table">
+              <thead><tr>
+                <th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th><th></th>
+              </tr></thead>
+              <tbody id="fin-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- Fixed tab -->
+      <div id="finTab-fixed" style="display:none;">
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+          <div style="background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);border-radius:10px;padding:12px 18px;display:flex;gap:20px;flex-wrap:wrap;">
+            <div><div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);">Total / Mês</div><div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--purple);" id="fe-total-month">0€</div></div>
+            <div><div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);">Total / Ano</div><div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#c084fc;" id="fe-total-year">0€</div></div>
+          </div>
+          <button class="tbtn tbtn-g" style="margin-left:auto;" onclick="openFixedExpModal()">+ Gasto Fixo</button>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">📌 Gastos Fixos Recorrentes</div></div>
+          <div class="tw">
+            <table class="fin-table">
+              <thead><tr>
+                <th>Nome</th><th>Categoria</th><th>Recorrência</th><th>Início</th><th>Término</th><th>Valor</th><th></th>
+              </tr></thead>
+              <tbody id="fe-tbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -669,18 +781,12 @@ td.tp a:hover{color:var(--green);}
     <div class="mtitle" id="clientModalTitle">Novo Cliente</div>
     <div class="frow c2">
       <div class="fg"><label class="flbl">Nome</label><input class="finp" id="c-name" placeholder="Nome do cliente"></div>
-      <div class="fg"><label class="flbl">Contacto (Telefone/Email)</label><input class="finp" id="c-contact" placeholder="+351…"></div>
+      <div class="fg"><label class="flbl">Telefone</label><input class="finp" id="c-contact" placeholder="+351…"></div>
     </div>
-    <div class="frow c3">
+    <div class="frow c2">
+      <div class="fg"><label class="flbl">Email do Cliente</label><input class="finp" type="email" id="c-email" placeholder="email@exemplo.com"></div>
       <div class="fg">
-        <label class="flbl">Plano</label>
-        <select class="fsel2" id="c-plan">
-          <option>Starter</option><option>Standard</option><option>Premium</option><option>VIP</option>
-        </select>
-      </div>
-      <div class="fg"><label class="flbl">Data de Renovação</label><input class="finp" type="date" id="c-renew"></div>
-      <div class="fg">
-        <label class="flbl">Estado de Pagamento</label>
+        <label class="flbl">Estado</label>
         <select class="fsel2" id="c-pay">
           <option value="Ativo">✅ Ativo</option>
           <option value="Por Pagar">⚠️ Por Pagar</option>
@@ -688,8 +794,22 @@ td.tp a:hover{color:var(--green);}
         </select>
       </div>
     </div>
+    <div class="frow c2">
+      <div class="fg">
+        <label class="flbl">Tipo de Plano</label>
+        <select class="fsel2" id="c-billing" onchange="calcRenew()">
+          <option value="Mensal">Mensal</option>
+          <option value="Trimestral">Trimestral</option>
+        </select>
+      </div>
+      <div class="fg"><label class="flbl">Preço (€)</label><input class="finp" type="number" id="c-price" placeholder="30" step="0.01" min="0"></div>
+    </div>
+    <div class="frow c2">
+      <div class="fg"><label class="flbl">Data do 1.º Pagamento</label><input class="finp" type="date" id="c-start" oninput="calcRenew()"></div>
+      <div class="fg"><label class="flbl">Próxima Renovação <small style="color:#555;font-size:9px;">(auto)</small></label><input class="finp" type="date" id="c-renew" readonly style="opacity:.6;cursor:default;"></div>
+    </div>
     <div class="frow">
-      <div class="fg"><label class="flbl">Notas</label><textarea class="finp mta" id="c-notes" placeholder="Observações…" rows="3"></textarea></div>
+      <div class="fg"><label class="flbl">Notas</label><textarea class="finp mta" id="c-notes" placeholder="Observações…" rows="2"></textarea></div>
     </div>
     <div class="mbtnrow">
       <button class="mbtn mbtn-s" onclick="closeClientModal()">Cancelar</button>
@@ -741,52 +861,132 @@ td.tp a:hover{color:var(--green);}
 
 <!-- CAMPAIGN MODAL -->
 <div class="mov" id="campaignModal">
-  <div class="mbox wide">
+  <div class="mbox" style="width:700px;max-width:96vw;">
     <button class="mclose" onclick="closeCampaignModal()">✕</button>
     <div class="mtitle" id="campaignModalTitle">Nova Campanha</div>
-    <div class="frow">
-      <div class="fg"><label class="flbl">Nome</label><input class="finp" id="camp-name" placeholder="Nome da campanha"></div>
+    <!-- Tabs -->
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px;">
+      <button id="ctab-info" class="camp-tab active" onclick="switchCampTab('info')">📋 Info</button>
+      <button id="ctab-adsets" class="camp-tab" onclick="switchCampTab('adsets')">🎯 Ad Sets (<span id="adsets-count">0</span>)</button>
     </div>
-    <div class="frow c2">
-      <div class="fg">
-        <label class="flbl">Plataforma</label>
-        <select class="fsel2" id="camp-platform">
-          <option value="Meta">Meta</option>
-          <option value="TikTok">TikTok</option>
-          <option value="Meta+TikTok">Meta+TikTok</option>
-        </select>
+    <!-- TAB INFO -->
+    <div id="campTab-info">
+      <div class="frow">
+        <div class="fg"><label class="flbl">Nome da Campanha</label><input class="finp" id="camp-name" placeholder="Nome da campanha"></div>
       </div>
-      <div class="fg">
-        <label class="flbl">Status</label>
-        <select class="fsel2" id="camp-status">
-          <option value="Draft">Draft</option>
-          <option value="Ready">Ready</option>
-          <option value="Live">Live</option>
-          <option value="Paused">Paused</option>
-          <option value="Ended">Ended</option>
-        </select>
-      </div>
-    </div>
-    <div class="frow c2">
-      <div class="fg"><label class="flbl">Data</label><input class="finp" type="date" id="camp-date"></div>
-      <div class="fg">
-        <label class="flbl">Tipo de Budget</label>
-        <div style="display:flex;gap:8px;margin-top:4px;">
-          <button type="button" id="camp-type-cbo" class="tbtn tbtn-r" onclick="setCampType('CBO')" style="flex:1;justify-content:center;">CBO</button>
-          <button type="button" id="camp-type-abo" class="tbtn tbtn-d" onclick="setCampType('ABO')" style="flex:1;justify-content:center;">ABO</button>
+      <div class="frow c2">
+        <div class="fg">
+          <label class="flbl">Plataforma</label>
+          <select class="fsel2" id="camp-platform">
+            <option value="Meta">Meta</option><option value="TikTok">TikTok</option><option value="Meta+TikTok">Meta+TikTok</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="flbl">Status</label>
+          <select class="fsel2" id="camp-status">
+            <option value="Draft">Draft</option><option value="Ready">Ready</option><option value="Live">Live</option><option value="Paused">Paused</option><option value="Ended">Ended</option>
+          </select>
         </div>
       </div>
+      <div class="frow c2">
+        <div class="fg"><label class="flbl">Data de Lançamento</label><input class="finp" type="date" id="camp-date"></div>
+        <div class="fg">
+          <label class="flbl">Tipo de Budget</label>
+          <div style="display:flex;gap:8px;margin-top:4px;">
+            <button type="button" id="camp-type-cbo" class="tbtn tbtn-r" onclick="setCampType('CBO')" style="flex:1;justify-content:center;">CBO</button>
+            <button type="button" id="camp-type-abo" class="tbtn tbtn-d" onclick="setCampType('ABO')" style="flex:1;justify-content:center;">ABO</button>
+          </div>
+        </div>
+      </div>
+      <div class="frow c2">
+        <div class="fg"><label class="flbl">Objetivo</label><input class="finp" id="camp-obj" placeholder="Conversões, tráfego…"></div>
+        <div class="fg"><label class="flbl">Budget Campanha (€)</label><input class="finp" type="number" id="camp-budget" value="0" min="0"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="flbl">Notas</label><textarea class="finp mta" id="camp-notes" placeholder="Notas adicionais…" rows="2"></textarea></div>
+      </div>
     </div>
-    <div class="frow c2">
-      <div class="fg"><label class="flbl">Objetivo</label><input class="finp" id="camp-obj" placeholder="Conversões, tráfego…"></div>
-      <div class="fg"><label class="flbl">Budget (€)</label><input class="finp" type="number" id="camp-budget" value="0" min="0"></div>
-    </div>
-    <div class="frow">
-      <div class="fg"><label class="flbl">Notas</label><textarea class="finp mta" id="camp-notes" placeholder="Notas adicionais…" rows="3"></textarea></div>
+    <!-- TAB ADSETS -->
+    <div id="campTab-adsets" style="display:none;">
+      <div id="adsets-list"></div>
+      <button class="tbtn tbtn-g" style="margin-top:10px;width:100%;justify-content:center;" onclick="addAdset()">+ Novo Ad Set</button>
     </div>
     <div class="mbtnrow">
       <button class="mbtn mbtn-s" onclick="closeCampaignModal()">Cancelar</button>
-      <button class="mbtn mbtn-p" onclick="saveCampaign()">💾 Guardar</button>
+      <button class="mbtn mbtn-p" onclick="saveCampaign()">💾 Guardar Campanha</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADSET CREATIVE MODAL -->
+<div class="mov" id="creativeModal">
+  <div class="mbox" style="width:560px;">
+    <button class="mclose" onclick="closeCreativeModal()">✕</button>
+    <div class="mtitle" id="creativeModalTitle">Criativo</div>
+    <div class="fg" style="margin-bottom:12px;">
+      <label class="flbl">Nome do Criativo</label>
+      <input class="finp" id="cr-name" placeholder="Ex: Video_V1, Imagem_Lifestyle">
+    </div>
+    <div class="cover-upload" onclick="document.getElementById('cr-file-input').click()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <div class="cover-upload-lbl">Upload do criativo (imagem/vídeo)<br><small style="color:#444;">Imagens comprimidas automaticamente</small></div>
+      <input type="file" id="cr-file-input" accept="image/*,video/*" onchange="handleCreativeUpload(this)">
+    </div>
+    <img id="cr-preview" style="width:100%;max-height:160px;object-fit:contain;border-radius:8px;margin-top:10px;display:none;" alt="">
+    <div class="mbtnrow">
+      <button class="mbtn mbtn-s" onclick="closeCreativeModal()">Cancelar</button>
+      <button class="mbtn mbtn-p" onclick="saveCreative()">💾 Guardar Criativo</button>
+    </div>
+  </div>
+</div>
+
+<!-- FIXED EXPENSE MODAL -->
+<div class="mov" id="fixedExpModal">
+  <div class="mbox">
+    <button class="mclose" onclick="closeFixedExpModal()">✕</button>
+    <div class="mtitle" id="fixedExpModalTitle">Novo Gasto Fixo</div>
+    <div class="frow">
+      <div class="fg"><label class="flbl">Nome</label><input class="finp" id="fe-name" placeholder="ex: Shopify, Claude Pro, Salário João"></div>
+    </div>
+    <div class="frow c2">
+      <div class="fg"><label class="flbl">Valor (€)</label><input class="finp" type="number" id="fe-value" placeholder="0.00" step="0.01" min="0"></div>
+      <div class="fg"><label class="flbl">Data de Início</label><input class="finp" type="date" id="fe-start"></div>
+    </div>
+    <div class="frow c2">
+      <div class="fg">
+        <label class="flbl">Categoria</label>
+        <select class="fsel2" id="fe-cat">
+          <option>Subscrições</option><option>Salários</option><option>Ferramentas / IAs</option><option>Equipamento</option><option>Contabilidade</option><option>Marketing externo</option><option>Outros</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="flbl">Recorrência</label>
+        <select class="fsel2" id="fe-recur">
+          <option value="Mensal">Mensal</option><option value="Trimestral">Trimestral</option><option value="Anual">Anual</option>
+        </select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="flbl">Data de Término (opcional)</label><input class="finp" type="date" id="fe-end"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="flbl">Notas</label><textarea class="finp mta" id="fe-notes" rows="2" placeholder="Observações…"></textarea></div>
+    </div>
+    <div class="mbtnrow">
+      <button class="mbtn mbtn-s" onclick="closeFixedExpModal()">Cancelar</button>
+      <button class="mbtn mbtn-p" onclick="saveFixedExp()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALENDAR DAY MODAL -->
+<div class="mov" id="calDayModal">
+  <div class="mbox" style="width:500px;">
+    <button class="mclose" onclick="document.getElementById('calDayModal').classList.remove('open');document.body.style.overflow='';">✕</button>
+    <div class="mtitle" id="calDayTitle">Vídeos do dia</div>
+    <div id="calDayContent" style="margin-top:8px;"></div>
+    <div style="margin-top:16px;">
+      <button class="tbtn tbtn-g" style="width:100%;justify-content:center;" id="calDayAddBtn">+ Novo Vídeo neste dia</button>
     </div>
   </div>
 </div>
@@ -907,6 +1107,7 @@ function startApp() {
   load();
   startSync();
   showPage('dashboard', document.getElementById('btn-dashboard'));
+  setTimeout(checkMonthlyNotifSchedule, 3000);
 }
 
 function doLogout() {
@@ -936,6 +1137,7 @@ function loadLocalData() {
   try { campaigns = JSON.parse(localStorage.getItem('spf_campaigns') || '[]'); } catch(e){campaigns=[];}
   try { finances  = JSON.parse(localStorage.getItem('spf_finances')  || '[]'); } catch(e){finances=[];}
   try { tasks     = JSON.parse(localStorage.getItem('spf_tasks')     || '[]'); } catch(e){tasks=[];}
+  try { fixedExpenses = JSON.parse(localStorage.getItem('spf_fixed_expenses') || '[]'); } catch(e){fixedExpenses=[];}
 }
 
 // ══ SUPABASE ══
@@ -1112,11 +1314,12 @@ function renderDash() {
   const ativos=clients.filter(c=>c.pay==='Ativo').length;
   const recTotal=finances.filter(f=>f.type==='Receita').reduce((s,f)=>s+parseFloat(f.value||0),0);
   const despTotal=finances.filter(f=>f.type==='Despesa').reduce((s,f)=>s+parseFloat(f.value||0),0);
+  const estRev=calcEstimatedRevenue();
   document.getElementById('dash-kpis').innerHTML=`
     <div class="sc"><div class="sc-lbl">Total Leads</div><div class="sc-val">${total}</div><div class="sc-desc">Contactos recebidos</div></div>
     <div class="sc g"><div class="sc-lbl">Clientes Ativos</div><div class="sc-val" style="color:var(--green)">${ativos}</div><div class="sc-desc">Com pagamento ativo</div></div>
-    <div class="sc b"><div class="sc-lbl">Receitas</div><div class="sc-val" style="color:var(--blue);font-size:28px;">${recTotal.toFixed(0)}€</div><div class="sc-desc">Total acumulado</div></div>
-    <div class="sc ${(recTotal-despTotal)<0?'':'g'}"><div class="sc-lbl">Lucro</div><div class="sc-val" style="color:${(recTotal-despTotal)<0?'#ff7070':'var(--green)'};;font-size:28px;">${(recTotal-despTotal).toFixed(0)}€</div><div class="sc-desc">Receitas - Despesas</div></div>`;
+    <div class="sc b"><div class="sc-lbl">Receita Est. Mês</div><div class="sc-val" style="color:var(--blue);font-size:28px;">${estRev.monthly.toFixed(0)}€</div><div class="sc-desc">Clientes ativos</div></div>
+    <div class="sc ${(recTotal-despTotal)<0?'':'g'}"><div class="sc-lbl">Lucro (finanças)</div><div class="sc-val" style="color:${(recTotal-despTotal)<0?'#ff7070':'var(--green)'};font-size:28px;">${(recTotal-despTotal).toFixed(0)}€</div><div class="sc-desc">Receitas - Despesas</div></div>`;
 
   // Chart: status
   const newN=leads.filter(l=>(l.status||'Novo')==='Novo').length;
@@ -1184,60 +1387,201 @@ function chart(id, bars) {
 }
 
 // ══ CLIENTS ══
+function calcEstimatedRevenue() {
+  const ativos = clients.filter(c => c.pay === 'Ativo');
+  let monthly = 0;
+  ativos.forEach(c => {
+    const p = parseFloat(c.price || 0);
+    if (c.billing === 'Trimestral') monthly += p / 3;
+    else monthly += p;
+  });
+  return { monthly, annual: monthly * 12 };
+}
+
+function calcRenew() {
+  const start = document.getElementById('c-start')?.value;
+  const billing = document.getElementById('c-billing')?.value || 'Mensal';
+  if (!start) return;
+  const d = new Date(start);
+  if (billing === 'Trimestral') d.setMonth(d.getMonth() + 3);
+  else d.setMonth(d.getMonth() + 1);
+  const val = d.toISOString().slice(0, 10);
+  const el = document.getElementById('c-renew');
+  if (el._flatpickr) el._flatpickr.setDate(val, false);
+  else el.value = val;
+}
+
+function autoAdvanceRenewals() {
+  const today = new Date().toISOString().slice(0, 10);
+  let changed = false;
+  clients.forEach(c => {
+    if (!c.renew) return;
+    if (c.renew < today) {
+      if (c.pay === 'Ativo') {
+        // Mark as Por Pagar instead of auto-advancing
+        c.pay = 'Por Pagar';
+        changed = true;
+      } else if (c.pay === 'Por Pagar') {
+        // Advance renewal date regardless so it's ready for next cycle
+        const d = new Date(c.renew);
+        if (c.billing === 'Trimestral') d.setMonth(d.getMonth() + 3);
+        else d.setMonth(d.getMonth() + 1);
+        c.renew = d.toISOString().slice(0, 10);
+        changed = true;
+      }
+    }
+  });
+  if (changed) saveLocalData();
+}
+
 function renderClients() {
-  const f=document.getElementById('filterClientStatus')?.value||'';
-  const list=clients.filter(c=>!f||c.pay===f);
-  const ativos=clients.filter(c=>c.pay==='Ativo').length;
-  const porPagar=clients.filter(c=>c.pay==='Por Pagar').length;
-  document.getElementById('clients-stats').innerHTML=`
-    <div class="sc g"><div class="sc-lbl">Total Clientes</div><div class="sc-val" style="color:var(--green)">${clients.length}</div></div>
-    <div class="sc"><div class="sc-lbl">Ativos</div><div class="sc-val">${ativos}</div></div>
-    <div class="sc y"><div class="sc-lbl">Por Pagar</div><div class="sc-val" style="color:var(--yellow)">${porPagar}</div></div>
-    <div class="sc b"><div class="sc-lbl">Cancelados</div><div class="sc-val" style="color:var(--blue)">${clients.filter(c=>c.pay==='Cancelado').length}</div></div>`;
-  const tb=document.getElementById('clients-tbody');
-  if(!list.length){tb.innerHTML=`<tr><td colspan="6"><div class="es"><div class="es-i">👤</div><div class="es-t">Sem clientes</div></div></td></tr>`;return;}
-  const today=new Date().toISOString().slice(0,10);
-  tb.innerHTML=list.map((c,i)=>{
-    const days=c.renew?Math.ceil((new Date(c.renew)-new Date())/(1000*60*60*24)):null;
-    const renewColor=days!==null&&days<=7?'color:#ff7070':days!==null&&days<=14?'color:var(--yellow)':'';
-    const payCls={Ativo:'bn',Cancelado:'bx','Por Pagar':'bc'}[c.pay]||'bx';
-    return `<tr>
+  autoAdvanceRenewals();
+  const f = document.getElementById('filterClientStatus')?.value || '';
+  const fb = document.getElementById('filterClientBilling')?.value || '';
+  const list = clients.filter(c => (!f || c.pay === f) && (!fb || c.billing === fb));
+  const ativos = clients.filter(c => c.pay === 'Ativo').length;
+  const porPagar = clients.filter(c => c.pay === 'Por Pagar').length;
+  const cancelados = clients.filter(c => c.pay === 'Cancelado').length;
+
+  document.getElementById('clients-stats').innerHTML = `
+    <div class="sc g"><div class="sc-lbl">Total</div><div class="sc-val" style="color:var(--green)">${clients.length}</div><div class="sc-desc">Clientes registados</div></div>
+    <div class="sc"><div class="sc-lbl">Ativos</div><div class="sc-val">${ativos}</div><div class="sc-desc">Com pagamento ativo</div></div>
+    <div class="sc y"><div class="sc-lbl">Por Pagar</div><div class="sc-val" style="color:var(--yellow)">${porPagar}</div><div class="sc-desc">Aguardam pagamento</div></div>
+    <div class="sc p"><div class="sc-lbl">Cancelados</div><div class="sc-val" style="color:var(--purple)">${cancelados}</div><div class="sc-desc">Para recuperar</div></div>`;
+
+  // Revenue estimate
+  const rev = calcEstimatedRevenue();
+  const mensais = clients.filter(c => c.pay === 'Ativo' && c.billing !== 'Trimestral').length;
+  const trim = clients.filter(c => c.pay === 'Ativo' && c.billing === 'Trimestral').length;
+  document.getElementById('est-monthly').textContent = rev.monthly.toFixed(2) + '€';
+  document.getElementById('est-annual').textContent = rev.annual.toFixed(2) + '€';
+  document.getElementById('est-breakdown').textContent = `${ativos} ativos — ${mensais} mensais · ${trim} trimestrais`;
+
+  const tb = document.getElementById('clients-tbody');
+  if (!list.length) { tb.innerHTML = `<tr><td colspan="8"><div class="es"><div class="es-i">👤</div><div class="es-t">Sem clientes</div><div class="es-d">${f === 'Cancelado' ? 'Nenhum cliente cancelado para recuperar.' : 'Adiciona o primeiro cliente.'}</div></div></td></tr>`; return; }
+
+  tb.innerHTML = list.map(c => {
+    const ci = clients.indexOf(c);
+    const days = c.renew ? Math.ceil((new Date(c.renew) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+    const renewColor = days !== null && days <= 5 ? 'color:#ff7070;font-weight:700;' : days !== null && days <= 10 ? 'color:var(--yellow);' : '';
+    const payCls = { Ativo: 'bn', Cancelado: 'bx', 'Por Pagar': 'bc' }[c.pay] || 'bx';
+    const billingCls = c.billing === 'Trimestral' ? 'bv' : 'bf';
+    const price = c.price ? parseFloat(c.price).toFixed(2) + '€' : '—';
+    const rowCls = c.pay==='Ativo'?'row-ativo':c.pay==='Por Pagar'?'row-porpagar':'row-cancelado';
+    return `<tr class="${rowCls}">
       <td class="tn">${x(c.name)}</td>
-      <td><span class="badge bf">${x(c.plan)}</span></td>
-      <td style="${renewColor}">${c.renew||'—'}${days!==null?' ('+days+'d)':''}</td>
-      <td><span class="badge ${payCls}">${c.pay||'—'}</span></td>
-      <td style="font-size:12px;color:var(--sub);">${x(c.contact||'—')}</td>
+      <td><span class="badge ${billingCls}">${c.billing || 'Mensal'}</span></td>
+      <td style="color:var(--green);font-weight:600;">${price}</td>
+      <td style="${renewColor}">${c.renew || '—'}${days !== null ? ' <small style="opacity:.7;">('+days+'d)</small>' : ''}</td>
+      <td><span class="badge ${payCls}">${c.pay || '—'}</span></td>
+      <td style="font-size:12px;color:var(--sub);">${x(c.contact || '—')}</td>
       <td style="display:flex;gap:4px;">
-        <button class="ibtn" onclick="openClientModal(${clients.indexOf(c)})">✏️</button>
-        <button class="ibtn del" onclick="deleteClient(${clients.indexOf(c)})">🗑️</button>
+        <button class="ibtn" onclick="openClientModal(${ci})">✏️</button>
+        <button class="ibtn del" onclick="deleteClient(${ci})">🗑️</button>
       </td>
     </tr>`;
   }).join('');
 }
-function openClientModal(i=null) {
-  editClientIdx=i;
-  document.getElementById('clientModalTitle').textContent=i===null?'Novo Cliente':'Editar Cliente';
-  const c=i!==null?clients[i]:{};
-  document.getElementById('c-name').value=c.name||'';
-  document.getElementById('c-contact').value=c.contact||'';
-  document.getElementById('c-plan').value=c.plan||'Starter';
-  document.getElementById('c-renew').value=c.renew||'';
-  document.getElementById('c-pay').value=c.pay||'Ativo';
-  document.getElementById('c-notes').value=c.notes||'';
+
+function openClientModal(i = null) {
+  editClientIdx = i;
+  document.getElementById('clientModalTitle').textContent = i === null ? 'Novo Cliente' : 'Editar Cliente';
+  const c = i !== null ? clients[i] : {};
+  document.getElementById('c-name').value = c.name || '';
+  document.getElementById('c-contact').value = c.contact || '';
+  document.getElementById('c-email').value = c.email || '';
+  document.getElementById('c-billing').value = c.billing || 'Mensal';
+  document.getElementById('c-price').value = c.price || '';
+  document.getElementById('c-start').value = c.start || '';
+  document.getElementById('c-renew').value = c.renew || '';
+  document.getElementById('c-pay').value = c.pay || 'Ativo';
+  document.getElementById('c-notes').value = c.notes || '';
   document.getElementById('clientModal').classList.add('open');
-  document.body.style.overflow='hidden';
+  document.body.style.overflow = 'hidden';
 }
-function closeClientModal(){document.getElementById('clientModal').classList.remove('open');document.body.style.overflow='';}
-function saveClient(){
-  const c={name:document.getElementById('c-name').value.trim(),contact:document.getElementById('c-contact').value.trim(),
-    plan:document.getElementById('c-plan').value,renew:document.getElementById('c-renew').value,
-    pay:document.getElementById('c-pay').value,notes:document.getElementById('c-notes').value,id:Date.now()};
-  if(!c.name){alert('Nome obrigatório.');return;}
-  if(editClientIdx!==null) clients[editClientIdx]=c; else clients.unshift(c);
+function closeClientModal() { document.getElementById('clientModal').classList.remove('open'); document.body.style.overflow = ''; }
+
+function saveClient() {
+  const billing = document.getElementById('c-billing').value;
+  const start = document.getElementById('c-start').value;
+  let renew = document.getElementById('c-renew').value;
+  // Auto-calc renew if start provided and renew not set manually
+  if (start && !renew) {
+    const d = new Date(start);
+    if (billing === 'Trimestral') d.setMonth(d.getMonth() + 3);
+    else d.setMonth(d.getMonth() + 1);
+    renew = d.toISOString().slice(0, 10);
+  }
+  const c = {
+    name: document.getElementById('c-name').value.trim(),
+    contact: document.getElementById('c-contact').value.trim(),
+    email: document.getElementById('c-email').value.trim(),
+    billing,
+    price: document.getElementById('c-price').value,
+    start,
+    renew,
+    pay: document.getElementById('c-pay').value,
+    notes: document.getElementById('c-notes').value,
+    id: Date.now()
+  };
+  if (!c.name) { alert('Nome obrigatório.'); return; }
+  if (editClientIdx !== null) clients[editClientIdx] = c; else clients.unshift(c);
   saveLocalData(); closeClientModal(); renderClients();
 }
-function deleteClient(i){if(!confirm('Eliminar cliente?'))return;clients.splice(i,1);saveLocalData();renderClients();}
-document.getElementById('clientModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeClientModal();});
+function deleteClient(i) { if (!confirm('Eliminar cliente?')) return; clients.splice(i, 1); saveLocalData(); renderClients(); }
+document.getElementById('clientModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeClientModal(); });
+
+// ── Notificação por email (mailto) ──
+function sendMonthlyReport() {
+  const email = document.getElementById('notif-email').value.trim();
+  if (!email) { alert('Insere o teu email primeiro.'); return; }
+  const rev = calcEstimatedRevenue();
+  const today = new Date().toLocaleDateString('pt-PT');
+  const ativos = clients.filter(c => c.pay === 'Ativo');
+  const porPagar = clients.filter(c => c.pay === 'Por Pagar');
+  const cancelados = clients.filter(c => c.pay === 'Cancelado');
+
+  let body = `RESUMO MENSAL STAYPERFIT — ${today}\n\n`;
+  body += `RECEITA ESTIMADA: ${rev.monthly.toFixed(2)}€/mês | ${rev.annual.toFixed(2)}€/ano\n\n`;
+  body += `CLIENTES ATIVOS (${ativos.length}):\n`;
+  ativos.forEach(c => { body += `  • ${c.name} — ${c.plan} ${c.billing} — ${c.price}€ — renova: ${c.renew || '—'}\n`; });
+  if (porPagar.length) {
+    body += `\nPOR PAGAR (${porPagar.length}):\n`;
+    porPagar.forEach(c => { body += `  • ${c.name} — ${c.plan} — ${c.contact || '—'}\n`; });
+  }
+  if (cancelados.length) {
+    body += `\nCANCELADOS — A RECUPERAR (${cancelados.length}):\n`;
+    cancelados.forEach(c => { body += `  • ${c.name} — ${c.plan} — ${c.contact || '—'}\n`; });
+  }
+
+  const subject = encodeURIComponent(`StayPerfit — Resumo de Clientes ${today}`);
+  const bodyEnc = encodeURIComponent(body);
+  window.open(`mailto:${email}?subject=${subject}&body=${bodyEnc}`);
+  const ns = document.getElementById('notif-status');
+  ns.textContent = '✅ Email preparado — confirma o envio no teu cliente de email.';
+  setTimeout(() => ns.textContent = '', 6000);
+}
+
+// ── Monthly notification check (run on load) ──
+function checkMonthlyNotifSchedule() {
+  const key = 'spf_last_monthly_notif';
+  const last = localStorage.getItem(key) || '';
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${now.getMonth()}`;
+  if (last !== thisMonth && now.getDate() >= 28) {
+    const savedEmail = localStorage.getItem('spf_notif_email') || '';
+    if (savedEmail) {
+      setTimeout(() => {
+        if (confirm('📧 Final do mês! Enviar resumo de clientes por email?')) {
+          document.getElementById('notif-email').value = savedEmail;
+          showPage('clients', document.getElementById('btn-clients'));
+          setTimeout(sendMonthlyReport, 300);
+          localStorage.setItem(key, thisMonth);
+        }
+      }, 2000);
+    }
+  }
+}
 
 // ══ VIDEOS ══
 async function handleCoverUpload(input) {
@@ -1266,7 +1610,19 @@ function compressImage(file, maxW, quality) {
     reader.readAsDataURL(file);
   });
 }
+function autoStatusVideos() {
+  const now = new Date(); let changed = false;
+  videos.forEach(v => {
+    if (v.status === 'Ready' && v.date) {
+      const dt = new Date(v.date + 'T' + (v.time || '00:00') + ':00');
+      if (dt <= now) { v.status = 'Live'; changed = true; }
+    }
+  });
+  if (changed) saveLocalData();
+}
+
 function renderVideos() {
+  autoStatusVideos();
   const f=document.getElementById('filterVideoStatus')?.value||'';
   const list=videos.filter(v=>!f||v.status===f);
   const grid=document.getElementById('videos-grid');
@@ -1350,7 +1706,36 @@ function renderCal() {
 }
 function calNav(dir){calMonth+=dir;if(calMonth>11){calMonth=0;calYear++;}else if(calMonth<0){calMonth=11;calYear--;}renderCal();}
 function calGoToday(){const n=new Date();calYear=n.getFullYear();calMonth=n.getMonth();renderCal();}
-function calDayClick(ds){openVideoModal();document.getElementById('v-date').value=ds;}
+function calDayClick(ds) {
+  const dayVids = videos.filter(v => v.date === ds);
+  const modal = document.getElementById('calDayModal');
+  const title = document.getElementById('calDayTitle');
+  const content = document.getElementById('calDayContent');
+  const d = new Date(ds+'T12:00:00');
+  title.textContent = d.toLocaleDateString('pt-PT', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  if (!dayVids.length) {
+    content.innerHTML = `<div style="text-align:center;padding:20px 0;color:var(--sub);font-size:13px;">Sem vídeos neste dia.</div>`;
+  } else {
+    content.innerHTML = dayVids.map(v => {
+      const vi = videos.indexOf(v);
+      return `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--s2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;" onclick="openVideoModal(${vi});document.getElementById('calDayModal').classList.remove('open');">
+        ${v.cover?`<img src="${v.cover}" style="width:56px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0;">`:`<div style="width:56px;height:40px;background:#222;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🎬</div>`}
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${x(v.title)}</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:2px;">${v.time||''} ${v.desc?'· '+v.desc.slice(0,40)+'…':''}</div>
+        </div>
+        <span class="badge ${statusCls(v.status||'Draft')}" style="flex-shrink:0;">${v.status||'Draft'}</span>
+        <span style="color:var(--sub);font-size:16px;">›</span>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('calDayAddBtn').onclick = () => {
+    modal.classList.remove('open'); document.body.style.overflow='';
+    openVideoModal(); document.getElementById('v-date').value=ds;
+  };
+  modal.classList.add('open'); document.body.style.overflow='hidden';
+}
+document.getElementById('calDayModal').addEventListener('click',e=>{if(e.target===e.currentTarget){e.currentTarget.classList.remove('open');document.body.style.overflow='';}});
 
 // ══ CAMPAIGNS ══
 function setCampType(t){
@@ -1358,15 +1743,123 @@ function setCampType(t){
   document.getElementById('camp-type-cbo').className='tbtn '+(t==='CBO'?'tbtn-r':'tbtn-d');
   document.getElementById('camp-type-abo').className='tbtn '+(t==='ABO'?'tbtn-r':'tbtn-d');
 }
+
+// ── Campaign tabs ──
+function switchCampTab(tab) {
+  ['info','adsets'].forEach(t=>{
+    document.getElementById('campTab-'+t).style.display=t===tab?'':'none';
+    document.getElementById('ctab-'+t).classList.toggle('active',t===tab);
+  });
+}
+
+// ── Adset state (during modal editing) ──
+let currentAdsets = [];
+
+function addAdset() {
+  currentAdsets.push({id:Date.now(), name:'Ad Set '+(currentAdsets.length+1), budget:0, copies:[''], headlines:[''], descriptions:[''], creatives:[]});
+  renderAdsetsEditor();
+}
+
+function renderAdsetsEditor() {
+  document.getElementById('adsets-count').textContent = currentAdsets.length;
+  const el = document.getElementById('adsets-list');
+  if (!currentAdsets.length) { el.innerHTML=`<div class="es"><div class="es-i">🎯</div><div class="es-t">Sem Ad Sets</div><div class="es-d">Clica "+ Novo Ad Set" para adicionar.</div></div>`; return; }
+  el.innerHTML = currentAdsets.map((as, ai) => `
+    <div class="adset-block">
+      <div class="adset-hdr">
+        <input class="copy-item input" style="flex:1;background:transparent;border:none;font-weight:700;font-size:13px;" value="${x(as.name)}" oninput="currentAdsets[${ai}].name=this.value">
+        ${campBudgetType==='ABO'?`<input type="number" placeholder="Budget €" value="${as.budget||0}" style="width:100px;background:#111;border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:12px;" oninput="currentAdsets[${ai}].budget=this.value">`:''}
+        <button class="rm-btn" onclick="currentAdsets.splice(${ai},1);renderAdsetsEditor()">🗑️</button>
+      </div>
+      <div class="adset-body">
+        <div class="adset-section">
+          <div class="adset-section-lbl">📝 Copies / Texto Principal</div>
+          ${as.copies.map((c,ci)=>`<div class="copy-item"><textarea oninput="currentAdsets[${ai}].copies[${ci}]=this.value">${x(c)}</textarea><button class="rm-btn" onclick="currentAdsets[${ai}].copies.splice(${ci},1);renderAdsetsEditor()">✕</button></div>`).join('')}
+          <button class="add-copy-btn" onclick="currentAdsets[${ai}].copies.push('');renderAdsetsEditor()">+ Copy</button>
+        </div>
+        <div class="adset-section">
+          <div class="adset-section-lbl">💬 Headlines</div>
+          ${as.headlines.map((h,hi)=>`<div class="copy-item"><input value="${x(h)}" placeholder="Headline…" oninput="currentAdsets[${ai}].headlines[${hi}]=this.value"><button class="rm-btn" onclick="currentAdsets[${ai}].headlines.splice(${hi},1);renderAdsetsEditor()">✕</button></div>`).join('')}
+          <button class="add-copy-btn" onclick="currentAdsets[${ai}].headlines.push('');renderAdsetsEditor()">+ Headline</button>
+        </div>
+        <div class="adset-section">
+          <div class="adset-section-lbl">📄 Descrições</div>
+          ${as.descriptions.map((d,di)=>`<div class="copy-item"><input value="${x(d)}" placeholder="Descrição…" oninput="currentAdsets[${ai}].descriptions[${di}]=this.value"><button class="rm-btn" onclick="currentAdsets[${ai}].descriptions.splice(${di},1);renderAdsetsEditor()">✕</button></div>`).join('')}
+          <button class="add-copy-btn" onclick="currentAdsets[${ai}].descriptions.push('');renderAdsetsEditor()">+ Descrição</button>
+        </div>
+        <div class="adset-section">
+          <div class="adset-section-lbl">🖼️ Criativos</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+            ${(as.creatives||[]).map((cr,cri)=>`
+              <div class="creative-chip" title="${x(cr.name||'')}">
+                ${cr.data&&cr.data.startsWith('data:image')?`<img src="${cr.data}" class="creative-thumb" onclick="viewCreative('${cr.data}')">`:cr.data?`<span style="font-size:18px;">🎬</span>`:''}
+                <span style="max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${x(cr.name||'criativo')}</span>
+                <a href="${cr.data||'#'}" download="${cr.name||'criativo'}" style="color:var(--blue);font-size:11px;text-decoration:none;" title="Download">↓</a>
+                <button class="rm-btn" onclick="currentAdsets[${ai}].creatives.splice(${cri},1);renderAdsetsEditor()">✕</button>
+              </div>`).join('')}
+          </div>
+          <button class="add-copy-btn" onclick="openCreativeModal(${ai})">+ Upload Criativo</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── Creative modal ──
+let currentCreativeAdsetIdx = null, currentCreativeData = null;
+function openCreativeModal(ai) { currentCreativeAdsetIdx=ai; currentCreativeData=null; document.getElementById('cr-name').value=''; document.getElementById('cr-preview').style.display='none'; document.getElementById('cr-file-input').value=''; document.getElementById('creativeModal').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeCreativeModal() { document.getElementById('creativeModal').classList.remove('open'); document.body.style.overflow=''; }
+async function handleCreativeUpload(input) {
+  const file=input.files[0]; if(!file) return;
+  if(file.type.startsWith('image/')) {
+    const data=await compressImage(file,1200,0.8);
+    currentCreativeData=data;
+    const p=document.getElementById('cr-preview'); p.src=data; p.style.display='block';
+  } else {
+    const reader=new FileReader();
+    reader.onload=e=>{ currentCreativeData=e.target.result; };
+    reader.readAsDataURL(file);
+  }
+  if (!document.getElementById('cr-name').value) document.getElementById('cr-name').value=file.name.replace(/\.[^.]+$/,'');
+}
+function saveCreative() {
+  if(!currentCreativeData){alert('Faz upload de um ficheiro primeiro.');return;}
+  const name=document.getElementById('cr-name').value||'criativo';
+  currentAdsets[currentCreativeAdsetIdx].creatives.push({name,data:currentCreativeData});
+  renderAdsetsEditor(); closeCreativeModal();
+}
+function viewCreative(src){window.open(src,'_blank');}
+document.getElementById('creativeModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeCreativeModal();});
+
+// ── Bulk download ──
+function bulkDownloadCreatives(ci) {
+  const camp = campaigns[ci];
+  if (!camp||!camp.adsets) return;
+  let count=0;
+  camp.adsets.forEach(as=>{
+    (as.creatives||[]).forEach(cr=>{
+      if(!cr.data) return;
+      setTimeout(()=>{
+        const a=Object.assign(document.createElement('a'),{href:cr.data,download:cr.name||'criativo'});
+        document.body.appendChild(a);a.click();a.remove();
+      },count*300);
+      count++;
+    });
+  });
+  if(!count) alert('Sem criativos para download.');
+}
+
 function renderCampaigns(){
+  // Auto-promote Ready → Live based on date
+  autoStatusCampaigns();
   const fs=document.getElementById('filterCampStatus')?.value||'';
   const fp=document.getElementById('filterCampPlatform')?.value||'';
   const list=campaigns.filter(c=>(!fs||c.status===fs)&&(!fp||c.platform===fp));
   const tb=document.getElementById('campaigns-tbody');
-  if(!list.length){tb.innerHTML=`<tr><td colspan="8"><div class="es"><div class="es-i">📣</div><div class="es-t">Sem campanhas</div></div></td></tr>`;return;}
+  if(!list.length){tb.innerHTML=`<tr><td colspan="9"><div class="es"><div class="es-i">📣</div><div class="es-t">Sem campanhas</div></div></td></tr>`;return;}
   const platColors={Meta:'bf',TikTok:'bv','Meta+TikTok':'bc'};
   tb.innerHTML=list.map(c=>{
     const ci=campaigns.indexOf(c);
+    const adsetCount=(c.adsets||[]).length;
     return `<tr>
       <td class="tn">${x(c.name)}</td>
       <td><span class="badge ${platColors[c.platform]||'bx'}">${x(c.platform)}</span></td>
@@ -1375,13 +1868,16 @@ function renderCampaigns(){
       <td style="color:var(--text);font-weight:600;">${c.budget?c.budget+'€':'—'}</td>
       <td><span class="badge ${c.budgetType==='CBO'?'bn':'bc'}">${c.budgetType||'CBO'}</span></td>
       <td style="font-size:12px;">${x(c.objective||'—')}</td>
+      <td><span class="badge bf" style="cursor:pointer;" onclick="openCampaignModal(${ci});setTimeout(()=>switchCampTab('adsets'),100)">🎯 ${adsetCount} adset${adsetCount!==1?'s':''}</span></td>
       <td style="display:flex;gap:4px;">
         <button class="ibtn" onclick="openCampaignModal(${ci})">✏️</button>
+        <button class="ibtn" onclick="bulkDownloadCreatives(${ci})" title="Download todos os criativos">↓</button>
         <button class="ibtn del" onclick="deleteCampaign(${ci})">🗑️</button>
       </td>
     </tr>`;
   }).join('');
 }
+
 function openCampaignModal(i=null){
   editCampIdx=i;
   document.getElementById('campaignModalTitle').textContent=i===null?'Nova Campanha':'Editar Campanha';
@@ -1394,6 +1890,9 @@ function openCampaignModal(i=null){
   document.getElementById('camp-budget').value=c.budget||0;
   document.getElementById('camp-notes').value=c.notes||'';
   campBudgetType=c.budgetType||'CBO'; setCampType(campBudgetType);
+  currentAdsets=JSON.parse(JSON.stringify(c.adsets||[]));
+  renderAdsetsEditor();
+  switchCampTab('info');
   document.getElementById('campaignModal').classList.add('open');
   document.body.style.overflow='hidden';
 }
@@ -1402,7 +1901,8 @@ function saveCampaign(){
   const c={name:document.getElementById('camp-name').value.trim(),platform:document.getElementById('camp-platform').value,
     status:document.getElementById('camp-status').value,date:document.getElementById('camp-date').value,
     objective:document.getElementById('camp-obj').value,budget:document.getElementById('camp-budget').value,
-    budgetType:campBudgetType,notes:document.getElementById('camp-notes').value,id:Date.now()};
+    budgetType:campBudgetType,notes:document.getElementById('camp-notes').value,
+    adsets:JSON.parse(JSON.stringify(currentAdsets)),id:Date.now()};
   if(!c.name){alert('Nome obrigatório.');return;}
   if(editCampIdx!==null) campaigns[editCampIdx]=c; else campaigns.unshift(c);
   saveLocalData(); closeCampaignModal(); renderCampaigns();
@@ -1410,30 +1910,56 @@ function saveCampaign(){
 function deleteCampaign(i){if(!confirm('Eliminar campanha?'))return;campaigns.splice(i,1);saveLocalData();renderCampaigns();}
 document.getElementById('campaignModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeCampaignModal();});
 
+// ── Auto-status: Ready→Live for campaigns ──
+function autoStatusCampaigns() {
+  const now=new Date(); let changed=false;
+  campaigns.forEach(c=>{
+    if(c.status==='Ready'&&c.date) {
+      const d=new Date(c.date+'T00:00:00');
+      if(d<=now){c.status='Live';changed=true;}
+    }
+  });
+  if(changed)saveLocalData();
+}
+
 // ══ FINANCES ══
+let currentFinTab = 'daily';
+let fixedExpenses = [];
+let editFixedExpIdx = null;
+
+function switchFinTab(tab) {
+  currentFinTab = tab;
+  ['daily','fixed'].forEach(t=>{
+    document.getElementById('finTab-'+t).style.display=t===tab?'':'none';
+    document.getElementById('ftab-'+t).classList.toggle('active',t===tab);
+  });
+  if(tab==='fixed') renderFixedExpenses();
+}
+
 function renderFinances(){
   const period=document.getElementById('fin-period')?.value||'30';
   const ftype=document.getElementById('fin-type')?.value||'';
   let cutoff=null;
   if(period!=='all'){const d=new Date();d.setDate(d.getDate()-parseInt(period));cutoff=d.toISOString().slice(0,10);}
-  const list=finances.filter(f=>(!cutoff||f.date>=cutoff)&&(!ftype||f.type===ftype))
-    .sort((a,b)=>b.date.localeCompare(a.date));
+  const list=finances.filter(f=>(!cutoff||f.date>=cutoff)&&(!ftype||f.type===ftype)).sort((a,b)=>b.date.localeCompare(a.date));
   const rec=finances.filter(f=>!cutoff||f.date>=cutoff).filter(f=>f.type==='Receita').reduce((s,f)=>s+parseFloat(f.value||0),0);
   const dep=finances.filter(f=>!cutoff||f.date>=cutoff).filter(f=>f.type==='Despesa').reduce((s,f)=>s+parseFloat(f.value||0),0);
-  const profit=rec-dep;
-  const roas=dep>0?(rec/dep).toFixed(2):'—';
+  // include fixed expenses (monthly equiv) in dep
+  const feMonthly=calcFixedExpMonthly();
+  const totalDep=dep+feMonthly;
+  const profit=rec-totalDep;
+  const roas=totalDep>0?(rec/totalDep).toFixed(2):'—';
   document.getElementById('fin-kpis').innerHTML=`
-    <div class="fkpi ${profit<0?'neg':'pos'}" style="--fac:${profit<0?'#ff7070':'var(--green)'}"><div class="fkpi-lbl">Lucro</div><div class="fkpi-val">${profit.toFixed(2)}€</div><div class="fkpi-sub">Rec - Dep</div></div>
+    <div class="fkpi ${profit<0?'neg':'pos'}" style="--fac:${profit<0?'#ff7070':'var(--green)'}"><div class="fkpi-lbl">Lucro</div><div class="fkpi-val">${profit.toFixed(2)}€</div><div class="fkpi-sub">c/ gastos fixos</div></div>
     <div class="fkpi" style="--fac:var(--green)"><div class="fkpi-lbl">Receitas</div><div class="fkpi-val" style="color:var(--green)">${rec.toFixed(2)}€</div></div>
-    <div class="fkpi" style="--fac:#ff7070"><div class="fkpi-lbl">Despesas</div><div class="fkpi-val" style="color:#ff7070">${dep.toFixed(2)}€</div></div>
-    <div class="fkpi" style="--fac:var(--blue)"><div class="fkpi-lbl">ROAS</div><div class="fkpi-val" style="color:var(--blue)">${roas}x</div></div>
-    <div class="fkpi" style="--fac:var(--yellow)"><div class="fkpi-lbl">Margem</div><div class="fkpi-val" style="color:var(--yellow)">${rec>0?((profit/rec)*100).toFixed(1):'0'}%</div></div>`;
+    <div class="fkpi" style="--fac:#ff7070"><div class="fkpi-lbl">Despesas Diárias</div><div class="fkpi-val" style="color:#ff7070">${dep.toFixed(2)}€</div></div>
+    <div class="fkpi" style="--fac:var(--purple)"><div class="fkpi-lbl">Gastos Fixos/Mês</div><div class="fkpi-val" style="color:var(--purple)">${feMonthly.toFixed(2)}€</div></div>
+    <div class="fkpi" style="--fac:var(--blue)"><div class="fkpi-lbl">ROAS</div><div class="fkpi-val" style="color:var(--blue)">${roas}x</div></div>`;
   const catColors={Receita:'#22c55e','Ad Spend':'#3b82f6',Clientes:'#22c55e',Software:'#f59e0b',Freelancers:'#a855f7',Outros:'#888'};
   const tb=document.getElementById('fin-tbody');
   if(!list.length){tb.innerHTML=`<tr><td colspan="6"><div class="es"><div class="es-i">💰</div><div class="es-t">Sem lançamentos</div></div></td></tr>`;return;}
   tb.innerHTML=list.map(f=>{
-    const fi=finances.indexOf(f);
-    const col=catColors[f.cat]||'#888';
+    const fi=finances.indexOf(f); const col=catColors[f.cat]||'#888';
     return `<tr>
       <td style="color:var(--text);font-size:12px;">${f.date||'—'}</td>
       <td class="tn">${x(f.desc||'—')}</td>
@@ -1447,6 +1973,71 @@ function renderFinances(){
     </tr>`;
   }).join('');
 }
+
+function calcFixedExpMonthly() {
+  const today=new Date().toISOString().slice(0,10);
+  return fixedExpenses.filter(fe=>!fe.end||fe.end>=today).reduce((s,fe)=>{
+    const v=parseFloat(fe.value||0);
+    if(fe.recur==='Anual') return s+v/12;
+    if(fe.recur==='Trimestral') return s+v/3;
+    return s+v;
+  },0);
+}
+
+function renderFixedExpenses() {
+  const today=new Date().toISOString().slice(0,10);
+  const monthly=calcFixedExpMonthly();
+  document.getElementById('fe-total-month').textContent=monthly.toFixed(2)+'€';
+  document.getElementById('fe-total-year').textContent=(monthly*12).toFixed(2)+'€';
+  const tb=document.getElementById('fe-tbody');
+  if(!fixedExpenses.length){tb.innerHTML=`<tr><td colspan="7"><div class="es"><div class="es-i">📌</div><div class="es-t">Sem gastos fixos</div></div></td></tr>`;return;}
+  const catColors={'Subscrições':'#3b82f6','Salários':'#22c55e','Ferramentas / IAs':'#a855f7','Equipamento':'#f59e0b','Contabilidade':'#f59e0b','Marketing externo':'#ff7070','Outros':'#888'};
+  tb.innerHTML=fixedExpenses.map((fe,i)=>{
+    const active=!fe.end||fe.end>=today;
+    const col=catColors[fe.cat]||'#888';
+    return `<tr style="${active?'':'opacity:.4;'}">
+      <td class="tn">${x(fe.name)}</td>
+      <td><span class="fin-cat-badge" style="background:${col}18;color:${col};">${x(fe.cat)}</span></td>
+      <td><span class="badge ${fe.recur==='Mensal'?'bf':fe.recur==='Trimestral'?'bc':'bv'}">${fe.recur}</span></td>
+      <td style="font-size:12px;">${fe.start||'—'}</td>
+      <td style="font-size:12px;${fe.end&&fe.end<today?'color:#ff7070;':''}">${fe.end||'—'}</td>
+      <td class="fin-neg" style="font-weight:700;">−${parseFloat(fe.value||0).toFixed(2)}€</td>
+      <td style="display:flex;gap:4px;">
+        <button class="ibtn" onclick="openFixedExpModal(${i})">✏️</button>
+        <button class="ibtn del" onclick="deleteFixedExp(${i})">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openFixedExpModal(i=null){
+  editFixedExpIdx=i;
+  document.getElementById('fixedExpModalTitle').textContent=i===null?'Novo Gasto Fixo':'Editar Gasto Fixo';
+  const fe=i!==null?fixedExpenses[i]:{};
+  document.getElementById('fe-name').value=fe.name||'';
+  document.getElementById('fe-value').value=fe.value||'';
+  document.getElementById('fe-start').value=fe.start||new Date().toISOString().slice(0,10);
+  document.getElementById('fe-cat').value=fe.cat||'Subscrições';
+  document.getElementById('fe-recur').value=fe.recur||'Mensal';
+  document.getElementById('fe-end').value=fe.end||'';
+  document.getElementById('fe-notes').value=fe.notes||'';
+  document.getElementById('fixedExpModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeFixedExpModal(){document.getElementById('fixedExpModal').classList.remove('open');document.body.style.overflow='';}
+function saveFixedExp(){
+  const fe={name:document.getElementById('fe-name').value.trim(),value:document.getElementById('fe-value').value,
+    start:document.getElementById('fe-start').value,cat:document.getElementById('fe-cat').value,
+    recur:document.getElementById('fe-recur').value,end:document.getElementById('fe-end').value,
+    notes:document.getElementById('fe-notes').value,id:Date.now()};
+  if(!fe.name||!fe.value){alert('Nome e valor obrigatórios.');return;}
+  if(editFixedExpIdx!==null) fixedExpenses[editFixedExpIdx]=fe; else fixedExpenses.push(fe);
+  localStorage.setItem('spf_fixed_expenses',JSON.stringify(fixedExpenses));
+  closeFixedExpModal(); renderFixedExpenses(); renderFinances();
+}
+function deleteFixedExp(i){if(!confirm('Eliminar gasto fixo?'))return;fixedExpenses.splice(i,1);localStorage.setItem('spf_fixed_expenses',JSON.stringify(fixedExpenses));renderFixedExpenses();renderFinances();}
+document.getElementById('fixedExpModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeFixedExpModal();});
+
 function openFinanceModal(i=null){
   editFinIdx=i;
   document.getElementById('financeModalTitle').textContent=i===null?'Novo Lançamento':'Editar Lançamento';
@@ -1480,19 +2071,55 @@ document.getElementById('financeModal').addEventListener('click',e=>{if(e.target
 
 // ══ TASKS ══
 const COLS={todo:{label:'A Fazer',color:'var(--sub)'},doing:{label:'Em Curso',color:'var(--yellow)'},done:{label:'Concluído',color:'var(--green)'}};
+
+function cleanExpiredTasks() {
+  const now = Date.now();
+  const before = tasks.length;
+  tasks = tasks.filter(t => !(t.completedAt && (now - t.completedAt) >= 24*60*60*1000));
+  if (tasks.length !== before) saveLocalData();
+}
+
+function toggleTaskDone(ti, evt) {
+  evt.stopPropagation();
+  const t = tasks[ti];
+  if (!t) return;
+  const item = evt.currentTarget.closest('.task-item');
+  if (evt.currentTarget.checked) {
+    t.col = 'done';
+    t.completedAt = Date.now();
+    item.classList.add('completing');
+    saveLocalData();
+    setTimeout(() => renderTasks(), 600);
+  } else {
+    t.col = 'todo';
+    t.completedAt = null;
+    saveLocalData();
+    renderTasks();
+  }
+}
+
 function renderTasks(){
+  cleanExpiredTasks();
   const board=document.getElementById('task-board');
   board.innerHTML=Object.entries(COLS).map(([col,{label,color}])=>{
     const colTasks=tasks.filter(t=>t.col===col);
-    const items=colTasks.map((t,i)=>{
+    const items=colTasks.map((t)=>{
       const ti=tasks.indexOf(t);
       const today=new Date().toISOString().slice(0,10);
       const overdue=t.due&&t.due<today&&col!=='done';
-      return `<div class="task-item" onclick="openTaskModal(${ti})">
-        <div class="task-name">${x(t.name)}</div>
-        <div class="task-assign"><div class="task-assign-dot">${(t.assign||'?')[0].toUpperCase()}</div>${x(t.assign||'Não atribuído')}</div>
-        ${t.prio&&t.prio!=='Normal'?`<span class="badge ${t.prio==='Urgente'?'bp':'bc'}" style="margin-top:4px;">${t.prio}</span>`:''}
-        ${t.due?`<div class="task-due${overdue?' overdue':''}">⏰ ${t.due}</div>`:''}
+      const isDone=col==='done';
+      const hoursLeft=isDone&&t.completedAt?Math.max(0,24-((Date.now()-t.completedAt)/(1000*60*60))):null;
+      const checked=isDone?'checked':'';
+      return `<div class="task-item${isDone?' completing':''}" onclick="openTaskModal(${ti})">
+        <div class="task-check-wrap">
+          <input type="checkbox" class="task-checkbox" ${checked} onclick="toggleTaskDone(${ti},event)">
+          <div style="flex:1;min-width:0;">
+            <div class="task-name" style="${isDone?'text-decoration:line-through;color:var(--sub);':''}">${x(t.name)}${isDone&&hoursLeft!==null?`<span class="task-deleting-badge">🗑 ${hoursLeft.toFixed(0)}h</span>`:''}</div>
+            <div class="task-assign"><div class="task-assign-dot">${(t.assign||'?')[0].toUpperCase()}</div>${x(t.assign||'Não atribuído')}</div>
+            ${t.prio&&t.prio!=='Normal'?`<span class="badge ${t.prio==='Urgente'?'bp':'bc'}" style="margin-top:4px;">${t.prio}</span>`:''}
+            ${t.due?`<div class="task-due${overdue?' overdue':''}">⏰ ${t.due}</div>`:''}
+          </div>
+        </div>
       </div>`;
     }).join('');
     return `<div class="task-col">
@@ -1504,6 +2131,9 @@ function renderTasks(){
       <button class="task-add-btn" onclick="openTaskModal(null,'${col}')">+ Adicionar tarefa</button>
     </div>`;
   }).join('');
+  // Schedule re-render to update countdown
+  clearTimeout(window._taskTimer);
+  window._taskTimer = setTimeout(renderTasks, 60*1000);
 }
 function openTaskModal(i=null,defaultCol='todo'){
   editTaskIdx=i;
@@ -1523,13 +2153,60 @@ function saveTask(){
     due:document.getElementById('task-due').value,col:document.getElementById('task-col').value,
     prio:document.getElementById('task-prio').value,id:Date.now()};
   if(!t.name){alert('Nome da tarefa obrigatório.');return;}
-  if(editTaskIdx!==null) tasks[editTaskIdx]=t; else tasks.push(t);
+  if(editTaskIdx!==null){t.completedAt=tasks[editTaskIdx].completedAt||null; tasks[editTaskIdx]=t;} else tasks.push(t);
   saveLocalData(); closeTaskModal(); renderTasks();
 }
 function deleteTask(i){if(!confirm('Eliminar tarefa?'))return;tasks.splice(i,1);saveLocalData();renderTasks();}
 document.getElementById('taskModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeTaskModal();});
 
-// ══ UTILS ══
+// ══ FLATPICKR DATE PICKERS ══
+function initDatePickers() {
+  const fpCfg = {
+    locale: 'pt', dateFormat: 'Y-m-d',
+    allowInput: true,
+    disableMobile: true,
+    theme: 'dark',
+  };
+  const fpTimeCfg = {
+    ...fpCfg,
+    enableTime: true, noCalendar: false,
+    time_24hr: true, dateFormat: 'Y-m-d',
+  };
+  const dateIds = [
+    'c-start','c-renew',
+    'v-date',
+    'camp-date',
+    'fin-date',
+    'fe-start','fe-end',
+    'task-due',
+  ];
+  dateIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el._flatpickr) flatpickr(el, {...fpCfg});
+  });
+}
+
+// Re-init pickers whenever a modal opens (pickers may not exist yet)
+const _origShowPage = showPage;
+function showPage(id, btn) {
+  _origShowPage(id, btn);
+  setTimeout(initDatePickers, 100);
+}
+
+// Patch modal openers to init after open
+['openClientModal','openVideoModal','openCampaignModal','openFinanceModal','openFixedExpModal','openTaskModal'].forEach(fn => {
+  const orig = window[fn];
+  window[fn] = function(...args) { orig.apply(this, args); setTimeout(initDatePickers, 80); };
+});
+
+// Also fix c-renew so flatpickr doesn't block calcRenew writing to it
+document.addEventListener('DOMContentLoaded', () => {
+  initDatePickers();
+  const ni = document.getElementById('notif-email');
+  if (ni) ni.addEventListener('blur', () => { if (ni.value) localStorage.setItem('spf_notif_email', ni.value); });
+});
+
+
 function x(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
 
