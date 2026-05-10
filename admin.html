@@ -479,11 +479,48 @@ tr.row-cancelado{background:rgba(168,85,247,.04) !important;}
       <!-- KPI row -->
       <div class="sgrid" id="dash-kpis"></div>
 
+      <!-- Visits banner -->
+      <div id="visits-banner" style="background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(168,85,247,.03));border:1px solid rgba(168,85,247,.18);border-radius:12px;padding:16px 24px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:10px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:10px 16px;">
+            <span id="live-dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#555;flex-shrink:0;"></span>
+            <div>
+              <div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:1px;">Ao Vivo</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;color:var(--green);line-height:1;" id="live-count">—</div>
+            </div>
+          </div>
+          <div style="width:1px;height:40px;background:var(--border);flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Visitas Hoje</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:1px;color:var(--purple);line-height:1;" id="visits-today">—</div>
+          </div>
+          <div style="width:1px;height:40px;background:var(--border);flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Esta Semana</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:#c084fc;line-height:1;" id="visits-week">—</div>
+          </div>
+          <div style="width:1px;height:40px;background:var(--border);flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Este Mês</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:#a855f7;line-height:1;" id="visits-month">—</div>
+          </div>
+          <div style="width:1px;height:40px;background:var(--border);flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Total</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--sub);line-height:1;" id="visits-total">—</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="font-size:11px;color:var(--sub);">📡 Dados em tempo real via Supabase</div>
+          <button class="tbtn tbtn-b" onclick="showPage('analytics',document.getElementById('btn-analytics'))" style="font-size:10px;">Ver Analytics →</button>
+        </div>
+      </div>
+
       <!-- Charts row -->
       <div class="dash-grid" style="margin-bottom:14px;">
         <div class="card">
           <div class="ch">
-            <div class="ct">📊 Performance Diária</div>
+            <div class="ct">📊 Performance Diária (Receitas)</div>
             <select class="fsel" id="dash-period" onchange="renderDash()">
               <option value="7">Últimos 7 dias</option>
               <option value="30">Últimos 30 dias</option>
@@ -495,6 +532,15 @@ tr.row-cancelado{background:rgba(168,85,247,.04) !important;}
           <div class="ch"><div class="ct">📈 Leads por Estado</div></div>
           <div style="padding:20px 24px;" id="chartStatus"></div>
         </div>
+      </div>
+
+      <!-- Visits chart -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="ch">
+          <div class="ct">👁 Visitas ao Site</div>
+          <button class="tbtn tbtn-d" onclick="showPage('analytics',document.getElementById('btn-analytics'))" style="font-size:10px;">Ver tudo →</button>
+        </div>
+        <div style="padding:20px 24px;" id="chartVisits"></div>
       </div>
 
       <!-- Bottom row -->
@@ -1808,6 +1854,60 @@ function exportVisitsCSV() {
   const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),download:'spf_visitas_'+new Date().toISOString().slice(0,10)+'.csv'});
   document.body.appendChild(a);a.click();a.remove();
 }
+async function renderLiveCount() {
+  try {
+    const cutoff = new Date(Date.now() - 60000).toISOString();
+    const data = await sb('/rest/v1/spf_live?select=id,device&ts=gte.' + cutoff);
+    const count = (data || []).length;
+    const el = document.getElementById('live-count');
+    const dot = document.getElementById('live-dot');
+    if (el) el.textContent = count;
+    if (dot) { dot.style.background = count > 0 ? '#22c55e' : '#555'; dot.style.animation = count > 0 ? 'livePulse 1.5s infinite' : 'none'; }
+    const aDot = document.getElementById('an-live-dot');
+    const aLbl = document.getElementById('an-live-label');
+    if (aDot) { aDot.style.background = count > 0 ? '#22c55e' : '#555'; aDot.style.animation = count > 0 ? 'livePulse 1.5s infinite' : 'none'; }
+    if (aLbl) aLbl.textContent = count + ' ao vivo agora';
+  } catch(e) {}
+}
+
+async function renderVisitsStats() {
+  if (!_anAllRows) await loadAllVisits();
+  const rows = _anAllRows;
+  const today = new Date().toISOString().slice(0, 10);
+  const todayV = rows.filter(r => r.date === today).length;
+  const now = new Date();
+  const dow = now.getDay() === 0 ? 6 : now.getDay() - 1;
+  let weekV = 0;
+  for (let i = 0; i <= dow; i++) { const d = new Date(now); d.setDate(d.getDate() - i); weekV += rows.filter(r => r.date === d.toISOString().slice(0,10)).length; }
+  const monthV = rows.filter(r => r.date && r.date.startsWith(today.slice(0,7))).length;
+  const el = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  el('visits-today', todayV); el('visits-week', weekV); el('visits-month', monthV); el('visits-total', rows.length);
+}
+
+async function renderVisitsChart() {
+  if (!_anAllRows) await loadAllVisits();
+  const rows = _anAllRows;
+  const period = parseInt(document.getElementById('dash-period')?.value || '7');
+  const bars = [];
+  for (let i = period - 1; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = d.toISOString().slice(0, 10);
+    bars.push({ label: d.toLocaleDateString('pt-PT', {month:'2-digit',day:'2-digit'}), val: rows.filter(r => r.date === ds).length, color: '#a855f7' });
+  }
+  chart('chartVisits', bars);
+}
+
+async function resetVisits() {
+  if (!confirm('Apagar toda a contagem de visitas? Irreversível.')) return;
+  try {
+    await sb('/rest/v1/spf_visits?created_at=not.is.null', { method: 'DELETE' });
+    _anAllRows = [];
+    await renderVisitsStats();
+    await renderVisitsChart();
+    if (document.getElementById('page-analytics')?.classList.contains('active')) renderAnalytics();
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
 function startLivePolling(){
   renderLiveCount();
   setInterval(renderLiveCount,10000);
