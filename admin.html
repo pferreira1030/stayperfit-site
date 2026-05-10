@@ -359,6 +359,13 @@ td.tp a:hover{color:var(--green);}
 .an-kpi-cmp.up{color:var(--green);}.an-kpi-cmp.dn{color:#ff7070;}.an-kpi-cmp.eq{color:var(--sub);}
 .an-tooltip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid rgba(255,0,0,.2);border-radius:7px;padding:6px 10px;font-size:11px;white-space:nowrap;pointer-events:none;z-index:10;color:var(--text);}
 
+/* ─── COVER UPLOAD ─── */
+.cover-upload{border:2px dashed rgba(255,255,255,.1);border-radius:10px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:border-color .2s;background:#0d0d0d;}
+.cover-upload:hover{border-color:rgba(255,0,0,.3);}
+.cover-upload input[type=file]{display:none;}
+.cover-upload-lbl{font-size:12px;color:var(--sub);text-align:center;line-height:1.5;}
+.cover-preview{width:100%;max-height:160px;object-fit:contain;border-radius:8px;margin-top:8px;display:none;}
+
 /* ─── CLIENT ROW COLORS ─── */
 .row-ativo td:first-child{border-left:3px solid var(--green);}
 .row-porpagar td:first-child{border-left:3px solid var(--yellow);}
@@ -1221,6 +1228,7 @@ function startApp() {
   // Then fetch fresh data from Supabase
   load();
   startSync();
+  startLivePolling();
   showPage('dashboard', document.getElementById('btn-dashboard'));
   setTimeout(checkMonthlyNotifSchedule, 3000);
 }
@@ -1795,67 +1803,11 @@ function exportVisitsCSV() {
   const {from,to}=getDateRange(_anPeriod);
   const rows=_anAllRows.filter(r=>r.date>=from&&r.date<=to);
   const hdr=['Data','Dispositivo','OS','Origem'];
-  const csv='﻿'+[hdr.join(','),...rows.map(r=>[r.date,r.device||'',r.os||'',r.ref||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','))].join('
-');
+  const lines=rows.map(r=>[r.date,r.device||'',r.os||'',r.ref||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+  const csv='\uFEFF'+[hdr.join(','),...lines].join('\r\n');
   const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),download:'spf_visitas_'+new Date().toISOString().slice(0,10)+'.csv'});
   document.body.appendChild(a);a.click();a.remove();
 }
-
-async function renderVisitsStats() {
-  if (!_anAllRows) await loadAllVisits();
-  const rows = _anAllRows;
-  const today = new Date().toISOString().slice(0,10);
-  const todayV = rows.filter(r=>r.date===today).length;
-  const now = new Date();
-  const dow = now.getDay()===0?6:now.getDay()-1;
-  let weekV=0;
-  for(let i=0;i<=dow;i++){const d=new Date(now);d.setDate(d.getDate()-i);weekV+=rows.filter(r=>r.date===d.toISOString().slice(0,10)).length;}
-  const monthV=rows.filter(r=>r.date&&r.date.startsWith(today.slice(0,7))).length;
-  const totalV=rows.length;
-  const el=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
-  el('visits-today',todayV);el('visits-week',weekV);el('visits-month',monthV);el('visits-total',totalV);
-}
-
-async function renderVisitsChart() {
-  if(!_anAllRows) await loadAllVisits();
-  const rows=_anAllRows;
-  const period=parseInt(document.getElementById('dash-period')?.value||'7');
-  const bars=[];
-  for(let i=period-1;i>=0;i--){
-    const d=new Date();d.setDate(d.getDate()-i);
-    const ds=d.toISOString().slice(0,10);
-    bars.push({label:d.toLocaleDateString('pt-PT',{month:'2-digit',day:'2-digit'}),val:rows.filter(r=>r.date===ds).length,color:'#a855f7'});
-  }
-  chart('chartVisits',bars);
-}
-
-async function renderLiveCount() {
-  try {
-    const cutoff=new Date(Date.now()-60000).toISOString();
-    const data=await sb('/rest/v1/spf_live?select=id,device&ts=gte.'+cutoff);
-    const count=(data||[]).length;
-    const el=document.getElementById('live-count');
-    const dot=document.getElementById('live-dot');
-    if(el) el.textContent=count;
-    if(dot){dot.style.background=count>0?'#22c55e':'#555';dot.style.animation=count>0?'livePulse 1.5s infinite':'none';}
-    const aDot=document.getElementById('an-live-dot');
-    const aLbl=document.getElementById('an-live-label');
-    if(aDot){aDot.style.background=count>0?'#22c55e':'#555';aDot.style.animation=count>0?'livePulse 1.5s infinite':'none';}
-    if(aLbl) aLbl.textContent=count+' ao vivo agora';
-  } catch(e){}
-}
-
-async function resetVisits() {
-  if(!confirm('Apagar toda a contagem de visitas? Irreversível.')) return;
-  try{
-    await sb('/rest/v1/spf_visits?created_at=not.is.null',{method:'DELETE'});
-    _anAllRows=[];
-    await renderVisitsStats();
-    await renderVisitsChart();
-    if(document.getElementById('page-analytics')?.classList.contains('active')) renderAnalytics();
-  }catch(e){alert('Erro: '+e.message);}
-}
-
 function startLivePolling(){
   renderLiveCount();
   setInterval(renderLiveCount,10000);
@@ -1864,6 +1816,8 @@ function startLivePolling(){
 // ══ DASHBOARD ══
 function renderDash() {
   renderStats();
+  renderVisitsStats();
+  renderVisitsChart();
   const period=parseInt(document.getElementById('dash-period')?.value||'7');
   document.getElementById('dash-daterange').textContent='Últimos '+period+' dias';
 
