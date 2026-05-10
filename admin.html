@@ -444,6 +444,37 @@ tr.row-cancelado{background:rgba(168,85,247,.04) !important;}
       <!-- KPI row -->
       <div class="sgrid" id="dash-kpis"></div>
 
+      <!-- Visits banner -->
+      <div id="visits-banner" style="background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(168,85,247,.03));border:1px solid rgba(168,85,247,.18);border-radius:12px;padding:16px 24px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Visitas Hoje</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:1px;color:var(--purple);line-height:1;" id="visits-today">0</div>
+          </div>
+          <div style="width:1px;height:40px;background:var(--border);flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Esta Semana</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:#c084fc;line-height:1;" id="visits-week">0</div>
+          </div>
+          <div style="width:1px;height:40px;background:var(--border);flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Este Mês</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:#a855f7;line-height:1;" id="visits-month">0</div>
+          </div>
+          <div style="width:1px;height:40px;background:var(--border);flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Total (histórico)</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--sub);line-height:1;" id="visits-total">0</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="font-size:11px;color:var(--sub);">
+            🔵 Registo automático via <strong style="color:var(--text);">stayperfit.pt</strong>
+          </div>
+          <button class="tbtn tbtn-d" onclick="resetVisits()" title="Resetar contagem">🗑 Reset</button>
+        </div>
+      </div>
+
       <!-- Charts row -->
       <div class="dash-grid" style="margin-bottom:14px;">
         <div class="card">
@@ -460,6 +491,15 @@ tr.row-cancelado{background:rgba(168,85,247,.04) !important;}
           <div class="ch"><div class="ct">📈 Leads por Estado</div></div>
           <div style="padding:20px 24px;" id="chartStatus"></div>
         </div>
+      </div>
+
+      <!-- Visits chart -->
+      <div class="card" style="margin-bottom:14px;">
+        <div class="ch">
+          <div class="ct">👁 Visitas ao Site (últimos 14 dias)</div>
+          <button class="tbtn tbtn-d" onclick="renderVisitsChart()" style="font-size:10px;">↻ Atualizar</button>
+        </div>
+        <div style="padding:20px 24px;" id="chartVisits"></div>
       </div>
 
       <!-- Bottom row -->
@@ -1470,9 +1510,73 @@ function exportCSV() {
   document.body.appendChild(a);a.click();a.remove();
 }
 
+// ══ VISITS TRACKING ══
+// O index.html do site chama: trackSPFVisit() ou incrementa spf_visits_YYYY-MM-DD no localStorage
+// Este painel lê esses dados e exibe
+function getVisitsData() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('spf_visits_')) {
+      const date = k.replace('spf_visits_', '');
+      data[date] = parseInt(localStorage.getItem(k) || '0');
+    }
+  }
+  return data;
+}
+
+function renderVisitsStats() {
+  const data = getVisitsData();
+  const today = new Date().toISOString().slice(0, 10);
+  const todayV = data[today] || 0;
+
+  // This week (Mon–Sun)
+  const now = new Date();
+  const dow = now.getDay() === 0 ? 6 : now.getDay() - 1;
+  let weekV = 0;
+  for (let i = 0; i <= dow; i++) {
+    const d = new Date(now); d.setDate(d.getDate() - i);
+    weekV += data[d.toISOString().slice(0, 10)] || 0;
+  }
+
+  // This month
+  const monthPfx = today.slice(0, 7);
+  const monthV = Object.entries(data).filter(([k]) => k.startsWith(monthPfx)).reduce((s, [, v]) => s + v, 0);
+
+  // Total
+  const totalV = Object.values(data).reduce((s, v) => s + v, 0);
+
+  document.getElementById('visits-today').textContent = todayV;
+  document.getElementById('visits-week').textContent = weekV;
+  document.getElementById('visits-month').textContent = monthV;
+  document.getElementById('visits-total').textContent = totalV;
+}
+
+function renderVisitsChart() {
+  const data = getVisitsData();
+  const bars = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = d.toISOString().slice(0, 10);
+    bars.push({ label: d.toLocaleDateString('pt-PT', { month: '2-digit', day: '2-digit' }), val: data[ds] || 0, color: '#a855f7' });
+  }
+  chart('chartVisits', bars);
+}
+
+function resetVisits() {
+  if (!confirm('Apagar toda a contagem de visitas? Irreversível.')) return;
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('spf_visits_')) localStorage.removeItem(k);
+  }
+  renderVisitsStats(); renderVisitsChart();
+}
+
 // ══ DASHBOARD ══
 function renderDash() {
   renderStats();
+  renderVisitsStats();
+  renderVisitsChart();
   const period=parseInt(document.getElementById('dash-period')?.value||'7');
   document.getElementById('dash-daterange').textContent='Últimos '+period+' dias';
 
@@ -2321,11 +2425,28 @@ function openTaskModal(i=null,defaultCol='todo'){
 }
 function closeTaskModal(){document.getElementById('taskModal').classList.remove('open');document.body.style.overflow='';}
 function saveTask(){
-  const t={name:document.getElementById('task-name').value.trim(),assign:document.getElementById('task-assign').value.trim(),
-    due:document.getElementById('task-due').value,col:document.getElementById('task-col').value,
-    prio:document.getElementById('task-prio').value,created_at:new Date().toISOString(),id:Date.now()};
-  if(!t.name){alert('Nome da tarefa obrigatório.');return;}
-  if(editTaskIdx!==null){t.completedAt=tasks[editTaskIdx].completedAt||null; tasks[editTaskIdx]=t;} else tasks.push(t);
+  const name=document.getElementById('task-name').value.trim();
+  if(!name){alert('Nome da tarefa obrigatório.');return;}
+  if(editTaskIdx!==null){
+    // EDIT: preserve original id and created_at to avoid Supabase duplicate
+    const orig=tasks[editTaskIdx];
+    tasks[editTaskIdx]={
+      id:orig.id, created_at:orig.created_at,
+      completedAt:orig.completedAt||null,
+      name, assign:document.getElementById('task-assign').value.trim(),
+      due:document.getElementById('task-due').value,
+      col:document.getElementById('task-col').value,
+      prio:document.getElementById('task-prio').value
+    };
+  } else {
+    tasks.push({
+      id:Date.now(), created_at:new Date().toISOString(), completedAt:null,
+      name, assign:document.getElementById('task-assign').value.trim(),
+      due:document.getElementById('task-due').value,
+      col:document.getElementById('task-col').value,
+      prio:document.getElementById('task-prio').value
+    });
+  }
   closeTaskModal(); renderTasks(); persist('spf_tasks', tasks);
 }
 function deleteTask(i){if(!confirm('Eliminar tarefa?'))return;tasks.splice(i,1);renderTasks();persist('spf_tasks',tasks);}
