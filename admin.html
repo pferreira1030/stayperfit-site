@@ -129,7 +129,6 @@ td.tp a:hover{color:var(--green);}
 .toast.show{transform:none;}
 .tdot{width:9px;height:9px;border-radius:50%;background:var(--green);animation:tp 1.5s infinite;flex-shrink:0;}
 @keyframes tp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.5)}}
-@keyframes livePulse{0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{opacity:.8;transform:scale(1.3);box-shadow:0 0 0 6px rgba(34,197,94,0)}}
 .tname{font-size:13px;font-weight:600;}
 .tinfo{font-size:11px;color:var(--sub);margin-top:2px;}
 
@@ -336,6 +335,30 @@ td.tp a:hover{color:var(--green);}
 .creative-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text);margin-right:6px;margin-bottom:6px;}
 .creative-chip:hover{border-color:rgba(255,0,0,.3);}
 
+/* ─── ANALYTICS ─── */
+.an-period-btn.active{background:rgba(255,0,0,.12)!important;color:var(--red)!important;}
+.an-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;}
+.an-bar-outer{width:100%;position:relative;display:flex;align-items:flex-end;justify-content:center;}
+.an-bar{border-radius:4px 4px 0 0;transition:all .4s cubic-bezier(.4,0,.2,1);cursor:pointer;position:relative;min-height:3px;}
+.an-bar:hover{filter:brightness(1.3);}
+.an-bar-cmp{border-radius:4px 4px 0 0;opacity:.3;position:absolute;bottom:0;left:0;right:0;}
+.an-lbl{font-size:10px;color:var(--sub);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;}
+.an-val{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.5px;color:var(--purple);}
+.an-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.an-row:last-child{border-bottom:none;}
+.an-row-lbl{font-size:13px;color:var(--text);flex:1;}
+.an-row-bar-wrap{width:120px;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;}
+.an-row-bar{height:6px;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+.an-row-val{font-size:13px;font-weight:700;color:var(--text);min-width:32px;text-align:right;}
+.an-row-pct{font-size:11px;color:var(--sub);min-width:36px;text-align:right;}
+.an-kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;}
+.an-kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--ak,var(--purple));opacity:.5;}
+.an-kpi-lbl{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);margin-bottom:6px;}
+.an-kpi-val{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:1px;line-height:1;color:var(--ak,var(--purple));}
+.an-kpi-cmp{font-size:11px;margin-top:4px;}
+.an-kpi-cmp.up{color:var(--green);}.an-kpi-cmp.dn{color:#ff7070;}.an-kpi-cmp.eq{color:var(--sub);}
+.an-tooltip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid rgba(255,0,0,.2);border-radius:7px;padding:6px 10px;font-size:11px;white-space:nowrap;pointer-events:none;z-index:10;color:var(--text);}
+
 /* ─── CLIENT ROW COLORS ─── */
 .row-ativo td:first-child{border-left:3px solid var(--green);}
 .row-porpagar td:first-child{border-left:3px solid var(--yellow);}
@@ -415,6 +438,10 @@ tr.row-cancelado{background:rgba(168,85,247,.04) !important;}
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         Tarefas
       </button>
+      <button class="snav-btn" id="btn-analytics" onclick="showPage('analytics',this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Analytics
+      </button>
     </div>
     <div class="sbottom">
       <div class="sbottom-info">
@@ -445,44 +472,6 @@ tr.row-cancelado{background:rgba(168,85,247,.04) !important;}
       <!-- KPI row -->
       <div class="sgrid" id="dash-kpis"></div>
 
-      <!-- Visits banner -->
-      <div id="visits-banner" style="background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(168,85,247,.03));border:1px solid rgba(168,85,247,.18);border-radius:12px;padding:16px 24px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-        <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
-          <!-- AO VIVO -->
-          <div style="display:flex;align-items:center;gap:10px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:10px 16px;">
-            <span id="live-dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#555;flex-shrink:0;"></span>
-            <div>
-              <div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:1px;">Ao Vivo</div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;color:var(--green);line-height:1;" id="live-count">—</div>
-            </div>
-          </div>
-          <div style="width:1px;height:40px;background:var(--border);flex-shrink:0;"></div>
-          <div>
-            <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Visitas Hoje</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:1px;color:var(--purple);line-height:1;" id="visits-today">—</div>
-          </div>
-          <div style="width:1px;height:40px;background:var(--border);flex-shrink:0;"></div>
-          <div>
-            <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Esta Semana</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:#c084fc;line-height:1;" id="visits-week">—</div>
-          </div>
-          <div style="width:1px;height:40px;background:var(--border);flex-shrink:0;"></div>
-          <div>
-            <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Este Mês</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:#a855f7;line-height:1;" id="visits-month">—</div>
-          </div>
-          <div style="width:1px;height:40px;background:var(--border);flex-shrink:0;"></div>
-          <div>
-            <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Total</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--sub);line-height:1;" id="visits-total">—</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="font-size:11px;color:var(--sub);">📡 Dados em tempo real via Supabase</div>
-          <button class="tbtn tbtn-d" onclick="resetVisits()" title="Resetar contagem">🗑 Reset</button>
-        </div>
-      </div>
-
       <!-- Charts row -->
       <div class="dash-grid" style="margin-bottom:14px;">
         <div class="card">
@@ -499,15 +488,6 @@ tr.row-cancelado{background:rgba(168,85,247,.04) !important;}
           <div class="ch"><div class="ct">📈 Leads por Estado</div></div>
           <div style="padding:20px 24px;" id="chartStatus"></div>
         </div>
-      </div>
-
-      <!-- Visits chart -->
-      <div class="card" style="margin-bottom:14px;">
-        <div class="ch">
-          <div class="ct">👁 Visitas ao Site (últimos 14 dias)</div>
-          <button class="tbtn tbtn-d" onclick="renderVisitsChart()" style="font-size:10px;">↻ Atualizar</button>
-        </div>
-        <div style="padding:20px 24px;" id="chartVisits"></div>
       </div>
 
       <!-- Bottom row -->
@@ -813,6 +793,83 @@ tr.row-cancelado{background:rgba(168,85,247,.04) !important;}
         <button class="tbtn tbtn-g" onclick="openTaskModal()">+ Nova Tarefa</button>
       </div>
       <div class="task-board" id="task-board"></div>
+    </div>
+
+  <!-- ══ PAGE ANALYTICS ══ -->
+    <div class="page" id="page-analytics">
+      <div class="ph">
+        <div class="pt">Analytics</div>
+        <div class="ps" id="an-daterange-label">Visitas ao site stayperfit.pt</div>
+      </div>
+
+      <!-- Filtros de período -->
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:20px;">
+        <div style="display:flex;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+          <button class="an-period-btn active" id="anp-7"   onclick="setAnPeriod(7)"   style="padding:8px 16px;background:none;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);transition:all .2s;">7 dias</button>
+          <button class="an-period-btn"        id="anp-30"  onclick="setAnPeriod(30)"  style="padding:8px 16px;background:none;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);transition:all .2s;">30 dias</button>
+          <button class="an-period-btn"        id="anp-90"  onclick="setAnPeriod(90)"  style="padding:8px 16px;background:none;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);transition:all .2s;">90 dias</button>
+          <button class="an-period-btn"        id="anp-365" onclick="setAnPeriod(365)" style="padding:8px 16px;background:none;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);transition:all .2s;">1 ano</button>
+          <button class="an-period-btn"        id="anp-0"   onclick="setAnPeriod(0)"   style="padding:8px 16px;background:none;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);transition:all .2s;">Tudo</button>
+        </div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);cursor:pointer;">
+          <input type="checkbox" id="an-compare" style="accent-color:var(--red);" onchange="renderAnalytics()"> Comparar período anterior
+        </label>
+        <div style="margin-left:auto;display:flex;gap:8px;">
+          <button class="tbtn tbtn-b" onclick="exportVisitsCSV()">↓ Exportar CSV</button>
+          <button class="tbtn tbtn-d" onclick="resetVisits()">🗑 Reset</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;" id="an-kpis"></div>
+
+      <!-- Gráfico principal -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="ch">
+          <div class="ct">📈 Visitas por Dia</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span id="an-live-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#555;"></span>
+            <span id="an-live-label" style="font-size:11px;color:var(--sub);">— ao vivo</span>
+          </div>
+        </div>
+        <div style="padding:24px 24px 16px;" id="an-chart-main"></div>
+      </div>
+
+      <!-- Linha 2: Dispositivos + OS + Referrers -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px;">
+        <div class="card">
+          <div class="ch"><div class="ct">📱 Dispositivos</div></div>
+          <div style="padding:16px 20px;" id="an-devices"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">💻 Sistema Operativo</div></div>
+          <div style="padding:16px 20px;" id="an-os"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct">🔗 Origem do Tráfego</div></div>
+          <div style="padding:16px 20px;" id="an-refs"></div>
+        </div>
+      </div>
+
+      <!-- Tabela por dia -->
+      <div class="card">
+        <div class="ch">
+          <div class="ct">📅 Visitas por Dia</div>
+          <div style="font-size:11px;color:var(--sub);" id="an-table-count"></div>
+        </div>
+        <div class="tw">
+          <table>
+            <thead><tr>
+              <th onclick="anSortBy('date')" style="cursor:pointer;">Data <span id="an-sort-date" style="opacity:.3;font-size:10px;">↕</span></th>
+              <th onclick="anSortBy('count')" style="cursor:pointer;">Visitas <span id="an-sort-count" style="opacity:.3;font-size:10px;">↕</span></th>
+              <th>Mobile</th>
+              <th>Desktop</th>
+              <th>vs. dia anterior</th>
+            </tr></thead>
+            <tbody id="an-tbody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
   </div><!-- /main -->
@@ -1164,7 +1221,6 @@ function startApp() {
   // Then fetch fresh data from Supabase
   load();
   startSync();
-  startLivePolling();
   showPage('dashboard', document.getElementById('btn-dashboard'));
   setTimeout(checkMonthlyNotifSchedule, 3000);
 }
@@ -1400,6 +1456,7 @@ function renderActivePage() {
   else if (id==='campaigns') renderCampaigns();
   else if (id==='finances')  renderFinances();
   else if (id==='tasks')     renderTasks();
+  else if (id==='analytics') renderAnalytics();
 }
 function showToast(name,phone) {
   document.getElementById('toastInfo').textContent=name+' · '+phone;
@@ -1422,6 +1479,7 @@ function showPage(id, btn) {
   if (id==='finances')  renderFinances();
   if (id==='tasks')     renderTasks();
   if (id==='leads')     renderAll();
+  if (id==='analytics') renderAnalytics();
   if (window.innerWidth<680) toggleSidebar();
 }
 
@@ -1519,92 +1577,293 @@ function exportCSV() {
   document.body.appendChild(a);a.click();a.remove();
 }
 
-// ══ VISITS TRACKING (Supabase) ══
-async function loadVisitsData() {
+// ══ VISITS & ANALYTICS (Supabase) ══
+let _anPeriod = 7;
+let _anAllRows = null;
+let _anSortKey = 'date';
+let _anSortDir = -1;
+
+async function loadAllVisits() {
   try {
-    // Buscar todas as visitas
-    const data = await sb('/rest/v1/spf_visits?select=date&order=date.asc');
-    return data || [];
-  } catch(e) { return []; }
+    const data = await sb('/rest/v1/spf_visits?select=date,device,os,ref&order=date.asc');
+    _anAllRows = data || [];
+    return _anAllRows;
+  } catch(e) { _anAllRows = []; return []; }
+}
+
+function getDateRange(days) {
+  const today = new Date().toISOString().slice(0,10);
+  if (!days) return { from: '2000-01-01', to: today };
+  const d = new Date(); d.setDate(d.getDate() - days + 1);
+  return { from: d.toISOString().slice(0,10), to: today };
+}
+
+function setAnPeriod(days) {
+  _anPeriod = days;
+  document.querySelectorAll('.an-period-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('anp-' + days);
+  if (btn) btn.classList.add('active');
+  renderAnalytics();
+}
+
+async function renderAnalytics() {
+  if (!_anAllRows) await loadAllVisits();
+  const rows = _anAllRows;
+  const { from, to } = getDateRange(_anPeriod);
+  const filtered = rows.filter(r => r.date >= from && r.date <= to);
+
+  const compare = document.getElementById('an-compare')?.checked;
+  let cmpFiltered = [];
+  if (compare && _anPeriod) {
+    const d1 = new Date(); d1.setDate(d1.getDate() - _anPeriod * 2 + 1);
+    const d2 = new Date(); d2.setDate(d2.getDate() - _anPeriod);
+    cmpFiltered = rows.filter(r => r.date >= d1.toISOString().slice(0,10) && r.date <= d2.toISOString().slice(0,10));
+  }
+
+  const total = filtered.length;
+  const cmpTotal = cmpFiltered.length;
+  const today = new Date().toISOString().slice(0,10);
+  const todayV = rows.filter(r => r.date === today).length;
+  const mobile = filtered.filter(r => r.device === 'Mobile').length;
+  const desktop = filtered.filter(r => r.device === 'Desktop').length;
+  const days2 = [...new Set(filtered.map(r=>r.date))].length || 1;
+  const avg = (total / days2).toFixed(1);
+
+  function pctChange(a, b) { if (!b) return null; return Math.round(((a-b)/b)*100); }
+  function cmpHtml(cur, prev) {
+    if (!compare || prev === null || prev === undefined) return '';
+    const p = pctChange(cur, prev); if (p === null) return '';
+    const cls = p > 0 ? 'up' : p < 0 ? 'dn' : 'eq';
+    const sym = p > 0 ? '▲' : p < 0 ? '▼' : '—';
+    return `<div class="an-kpi-cmp ${cls}">${sym} ${Math.abs(p)}% vs anterior</div>`;
+  }
+
+  const kpisEl = document.getElementById('an-kpis');
+  if (kpisEl) kpisEl.innerHTML = `
+    <div class="an-kpi" style="--ak:var(--purple)">
+      <div class="an-kpi-lbl">Total Visitas</div>
+      <div class="an-kpi-val">${total}</div>
+      ${cmpHtml(total, cmpTotal)}
+    </div>
+    <div class="an-kpi" style="--ak:var(--green)">
+      <div class="an-kpi-lbl">Hoje</div>
+      <div class="an-kpi-val" style="color:var(--green)">${todayV}</div>
+      <div class="an-kpi-cmp eq">tempo real</div>
+    </div>
+    <div class="an-kpi" style="--ak:var(--blue)">
+      <div class="an-kpi-lbl">Média / Dia</div>
+      <div class="an-kpi-val" style="color:var(--blue)">${avg}</div>
+    </div>
+    <div class="an-kpi" style="--ak:#f59e0b">
+      <div class="an-kpi-lbl">Mobile</div>
+      <div class="an-kpi-val" style="color:#f59e0b">${mobile}</div>
+      <div class="an-kpi-cmp eq">${total ? Math.round(mobile/total*100) : 0}%</div>
+    </div>
+    <div class="an-kpi" style="--ak:#60a5fa">
+      <div class="an-kpi-lbl">Desktop</div>
+      <div class="an-kpi-val" style="color:#60a5fa">${desktop}</div>
+      <div class="an-kpi-cmp eq">${total ? Math.round(desktop/total*100) : 0}%</div>
+    </div>`;
+
+  // Chart
+  const dateMap = {};
+  filtered.forEach(r => { dateMap[r.date] = (dateMap[r.date]||0)+1; });
+  const cmpDateMap = {};
+  if (compare) cmpFiltered.forEach(r => { cmpDateMap[r.date] = (cmpDateMap[r.date]||0)+1; });
+
+  const dayList = [];
+  if (_anPeriod && _anPeriod <= 90) {
+    for (let i = _anPeriod-1; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate()-i);
+      dayList.push(d.toISOString().slice(0,10));
+    }
+  } else {
+    const allDates = Object.keys(dateMap).sort();
+    const start = allDates[0] || from;
+    for (let d = new Date(start+'T12:00:00'); d.toISOString().slice(0,10) <= to; d.setDate(d.getDate()+1)) {
+      dayList.push(d.toISOString().slice(0,10));
+    }
+  }
+
+  const vals = dayList.map(d => dateMap[d] || 0);
+  const cmpVals = dayList.map(d => {
+    if (!compare || !_anPeriod) return 0;
+    const cd = new Date(d+'T12:00:00'); cd.setDate(cd.getDate() - _anPeriod);
+    return cmpDateMap[cd.toISOString().slice(0,10)] || 0;
+  });
+  const maxV = Math.max(...vals, ...cmpVals, 1);
+  const n = dayList.length;
+  const labelEvery = n <= 14 ? 1 : n <= 31 ? 2 : n <= 90 ? 7 : 30;
+  const gap = n > 60 ? 2 : 4;
+
+  const barsHtml = dayList.map((d, i) => {
+    const v = vals[i], cv = cmpVals[i];
+    const barH = Math.max(3, Math.round(v/maxV*140));
+    const cmpH = Math.max(3, Math.round(cv/maxV*140));
+    const showLbl = (i % labelEvery === 0) || i === n-1;
+    const lbl = showLbl ? new Date(d+'T12:00:00').toLocaleDateString('pt-PT',{month:'2-digit',day:'2-digit'}) : '';
+    const isToday = d === today;
+    return `<div class="an-bar-wrap" title="${d}: ${v} visitas${compare?' | anterior: '+cv:''}">
+      <div class="an-val">${v > 0 ? v : ''}</div>
+      <div class="an-bar-outer" style="height:140px;">
+        ${compare?`<div style="position:absolute;bottom:0;left:0;right:0;width:70%;margin:0 auto;height:${cmpH}px;background:rgba(168,85,247,.3);border-radius:4px 4px 0 0;"></div>`:''}
+        <div class="an-bar" style="height:${barH}px;width:${compare?'55%':'78%'};background:${isToday?'#ff0000':'rgba(168,85,247,.85)'};border:1px solid ${isToday?'#ff5555':'rgba(168,85,247,.5)'};${isToday?'box-shadow:0 0 8px rgba(255,0,0,.3);':''}"></div>
+      </div>
+      <div class="an-lbl">${lbl}</div>
+    </div>`;
+  }).join('');
+
+  const chartEl = document.getElementById('an-chart-main');
+  if (chartEl) chartEl.innerHTML = `
+    <div style="display:flex;align-items:flex-end;gap:${gap}px;height:180px;padding-bottom:4px;overflow-x:auto;">${barsHtml}</div>
+    ${compare?'<div style="display:flex;gap:14px;margin-top:8px;font-size:11px;color:var(--sub);"><span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:5px;background:rgba(168,85,247,.85);border-radius:2px;display:inline-block;"></span>Atual</span><span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:5px;background:rgba(168,85,247,.3);border-radius:2px;display:inline-block;"></span>Anterior</span></div>':''}`;
+
+  // Breakdowns
+  function breakdownHtml(key, colors) {
+    const counts = {};
+    filtered.forEach(r => { const v = r[key] || 'Desconhecido'; counts[v] = (counts[v]||0)+1; });
+    const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    const maxC = sorted[0]?.[1] || 1;
+    if (!sorted.length) return '<div style="padding:20px;text-align:center;font-size:12px;color:#444;">Sem dados</div>';
+    return sorted.map(([k,v], i) => {
+      const pct = total ? Math.round(v/total*100) : 0;
+      return `<div class="an-row">
+        <div class="an-row-lbl">${x(k)}</div>
+        <div class="an-row-bar-wrap"><div class="an-row-bar" style="width:${Math.round(v/maxC*100)}%;background:${colors[i%colors.length]};"></div></div>
+        <div class="an-row-val">${v}</div>
+        <div class="an-row-pct">${pct}%</div>
+      </div>`;
+    }).join('');
+  }
+
+  const devEl = document.getElementById('an-devices');
+  const osEl  = document.getElementById('an-os');
+  const refEl = document.getElementById('an-refs');
+  if (devEl) devEl.innerHTML = breakdownHtml('device', ['#f59e0b','#60a5fa','#a855f7']);
+  if (osEl)  osEl.innerHTML  = breakdownHtml('os',     ['#3b82f6','#22c55e','#f59e0b','#a855f7','#ff7070','#888']);
+  if (refEl) refEl.innerHTML = breakdownHtml('ref',    ['#22c55e','#3b82f6','#f59e0b','#a855f7','#ff7070','#888']);
+
+  // Table
+  const tableData = [];
+  Object.entries(dateMap).forEach(([date, count]) => {
+    const dayRows = filtered.filter(r=>r.date===date);
+    tableData.push({ date, count, mob: dayRows.filter(r=>r.device==='Mobile').length, dsk: dayRows.filter(r=>r.device==='Desktop').length });
+  });
+  if (_anSortKey==='date') tableData.sort((a,b)=>_anSortDir*a.date.localeCompare(b.date));
+  else tableData.sort((a,b)=>_anSortDir*(a.count-b.count));
+
+  ['date','count'].forEach(k => {
+    const el = document.getElementById('an-sort-'+k);
+    if (el) { el.textContent = _anSortKey===k ? (_anSortDir===-1?'↓':'↑') : '↕'; el.style.opacity = _anSortKey===k ? '1' : '.3'; }
+  });
+
+  const cntEl = document.getElementById('an-table-count');
+  if (cntEl) cntEl.textContent = tableData.length + ' dias com visitas';
+
+  const tbEl = document.getElementById('an-tbody');
+  if (!tbEl) return;
+  if (!tableData.length) { tbEl.innerHTML=`<tr><td colspan="5"><div class="es"><div class="es-i">📊</div><div class="es-t">Sem dados neste período</div></div></td></tr>`; return; }
+
+  tbEl.innerHTML = tableData.map((row, i) => {
+    const prevIdx = _anSortDir === -1 ? i+1 : i-1;
+    const prev = tableData[prevIdx];
+    let changeHtml = '<span style="color:var(--sub);">—</span>';
+    if (prev) {
+      const diff = row.count - prev.count;
+      const cls = diff>0?'color:var(--green);':diff<0?'color:#ff7070;':'color:var(--sub);';
+      changeHtml = `<span style="${cls}">${diff>0?'▲ +':diff<0?'▼ ':''}${diff}</span>`;
+    }
+    const dateStr = new Date(row.date+'T12:00:00').toLocaleDateString('pt-PT',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'});
+    const isToday = row.date === today;
+    return `<tr style="${isToday?'background:rgba(255,0,0,.04);':''}">
+      <td style="color:var(--text);font-weight:${isToday?700:400};">${dateStr}${isToday?' <span class="badge bn" style="font-size:9px;padding:2px 6px;">hoje</span>':''}</td>
+      <td style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--purple);">${row.count}</td>
+      <td style="color:#f59e0b;">${row.mob>0?'📱 '+row.mob:'—'}</td>
+      <td style="color:#60a5fa;">${row.dsk>0?'💻 '+row.dsk:'—'}</td>
+      <td>${changeHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+function anSortBy(key) {
+  if (_anSortKey===key) _anSortDir*=-1; else { _anSortKey=key; _anSortDir=-1; }
+  renderAnalytics();
+}
+
+function exportVisitsCSV() {
+  if (!_anAllRows||!_anAllRows.length){alert('Sem dados.');return;}
+  const {from,to}=getDateRange(_anPeriod);
+  const rows=_anAllRows.filter(r=>r.date>=from&&r.date<=to);
+  const hdr=['Data','Dispositivo','OS','Origem'];
+  const csv='﻿'+[hdr.join(','),...rows.map(r=>[r.date,r.device||'',r.os||'',r.ref||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','))].join('
+');
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),download:'spf_visitas_'+new Date().toISOString().slice(0,10)+'.csv'});
+  document.body.appendChild(a);a.click();a.remove();
 }
 
 async function renderVisitsStats() {
-  const rows = await loadVisitsData();
-  const today = new Date().toISOString().slice(0, 10);
-
-  const todayV = rows.filter(r => r.date === today).length;
-
+  if (!_anAllRows) await loadAllVisits();
+  const rows = _anAllRows;
+  const today = new Date().toISOString().slice(0,10);
+  const todayV = rows.filter(r=>r.date===today).length;
   const now = new Date();
-  const dow = now.getDay() === 0 ? 6 : now.getDay() - 1;
-  let weekV = 0;
-  for (let i = 0; i <= dow; i++) {
-    const d = new Date(now); d.setDate(d.getDate() - i);
-    const ds = d.toISOString().slice(0, 10);
-    weekV += rows.filter(r => r.date === ds).length;
-  }
-
-  const monthPfx = today.slice(0, 7);
-  const monthV = rows.filter(r => r.date && r.date.startsWith(monthPfx)).length;
-  const totalV = rows.length;
-
-  const el = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-  el('visits-today',  todayV);
-  el('visits-week',   weekV);
-  el('visits-month',  monthV);
-  el('visits-total',  totalV);
-
-  // Store rows for chart
-  window._visitsRows = rows;
+  const dow = now.getDay()===0?6:now.getDay()-1;
+  let weekV=0;
+  for(let i=0;i<=dow;i++){const d=new Date(now);d.setDate(d.getDate()-i);weekV+=rows.filter(r=>r.date===d.toISOString().slice(0,10)).length;}
+  const monthV=rows.filter(r=>r.date&&r.date.startsWith(today.slice(0,7))).length;
+  const totalV=rows.length;
+  const el=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  el('visits-today',todayV);el('visits-week',weekV);el('visits-month',monthV);el('visits-total',totalV);
 }
 
 async function renderVisitsChart() {
-  const rows = window._visitsRows || await loadVisitsData();
-  const period = parseInt(document.getElementById('dash-period')?.value || '7');
-  const bars = [];
-  for (let i = period - 1; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const ds = d.toISOString().slice(0, 10);
-    bars.push({ label: d.toLocaleDateString('pt-PT', { month: '2-digit', day: '2-digit' }), val: rows.filter(r => r.date === ds).length, color: '#a855f7' });
+  if(!_anAllRows) await loadAllVisits();
+  const rows=_anAllRows;
+  const period=parseInt(document.getElementById('dash-period')?.value||'7');
+  const bars=[];
+  for(let i=period-1;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const ds=d.toISOString().slice(0,10);
+    bars.push({label:d.toLocaleDateString('pt-PT',{month:'2-digit',day:'2-digit'}),val:rows.filter(r=>r.date===ds).length,color:'#a855f7'});
   }
-  chart('chartVisits', bars);
+  chart('chartVisits',bars);
 }
 
 async function renderLiveCount() {
   try {
-    // Visitantes ao vivo = heartbeat nos últimos 60s
-    const cutoff = new Date(Date.now() - 60000).toISOString();
-    const data = await sb('/rest/v1/spf_live?select=id&ts=gte.' + cutoff);
-    const count = (data || []).length;
-    const el = document.getElementById('live-count');
-    const dot = document.getElementById('live-dot');
-    if (el) el.textContent = count;
-    if (dot) {
-      dot.style.background = count > 0 ? '#22c55e' : '#555';
-      dot.style.animation = count > 0 ? 'livePulse 1.5s infinite' : 'none';
-    }
-  } catch(e) {}
+    const cutoff=new Date(Date.now()-60000).toISOString();
+    const data=await sb('/rest/v1/spf_live?select=id,device&ts=gte.'+cutoff);
+    const count=(data||[]).length;
+    const el=document.getElementById('live-count');
+    const dot=document.getElementById('live-dot');
+    if(el) el.textContent=count;
+    if(dot){dot.style.background=count>0?'#22c55e':'#555';dot.style.animation=count>0?'livePulse 1.5s infinite':'none';}
+    const aDot=document.getElementById('an-live-dot');
+    const aLbl=document.getElementById('an-live-label');
+    if(aDot){aDot.style.background=count>0?'#22c55e':'#555';aDot.style.animation=count>0?'livePulse 1.5s infinite':'none';}
+    if(aLbl) aLbl.textContent=count+' ao vivo agora';
+  } catch(e){}
 }
 
 async function resetVisits() {
-  if (!confirm('Apagar toda a contagem de visitas? Irreversível.')) return;
-  try {
-    await sb('/rest/v1/spf_visits?created_at=not.is.null', { method: 'DELETE' });
+  if(!confirm('Apagar toda a contagem de visitas? Irreversível.')) return;
+  try{
+    await sb('/rest/v1/spf_visits?created_at=not.is.null',{method:'DELETE'});
+    _anAllRows=[];
     await renderVisitsStats();
     await renderVisitsChart();
-  } catch(e) { alert('Erro ao apagar: '+e.message); }
+    if(document.getElementById('page-analytics')?.classList.contains('active')) renderAnalytics();
+  }catch(e){alert('Erro: '+e.message);}
 }
 
-// Arrancar polling ao vivo a cada 10s
-function startLivePolling() {
+function startLivePolling(){
   renderLiveCount();
-  setInterval(renderLiveCount, 10000);
+  setInterval(renderLiveCount,10000);
 }
 
 // ══ DASHBOARD ══
 function renderDash() {
   renderStats();
-  renderVisitsStats();
-  renderVisitsChart();
   const period=parseInt(document.getElementById('dash-period')?.value||'7');
   document.getElementById('dash-daterange').textContent='Últimos '+period+' dias';
 
@@ -2453,28 +2712,11 @@ function openTaskModal(i=null,defaultCol='todo'){
 }
 function closeTaskModal(){document.getElementById('taskModal').classList.remove('open');document.body.style.overflow='';}
 function saveTask(){
-  const name=document.getElementById('task-name').value.trim();
-  if(!name){alert('Nome da tarefa obrigatório.');return;}
-  if(editTaskIdx!==null){
-    // EDIT: preserve original id and created_at to avoid Supabase duplicate
-    const orig=tasks[editTaskIdx];
-    tasks[editTaskIdx]={
-      id:orig.id, created_at:orig.created_at,
-      completedAt:orig.completedAt||null,
-      name, assign:document.getElementById('task-assign').value.trim(),
-      due:document.getElementById('task-due').value,
-      col:document.getElementById('task-col').value,
-      prio:document.getElementById('task-prio').value
-    };
-  } else {
-    tasks.push({
-      id:Date.now(), created_at:new Date().toISOString(), completedAt:null,
-      name, assign:document.getElementById('task-assign').value.trim(),
-      due:document.getElementById('task-due').value,
-      col:document.getElementById('task-col').value,
-      prio:document.getElementById('task-prio').value
-    });
-  }
+  const t={name:document.getElementById('task-name').value.trim(),assign:document.getElementById('task-assign').value.trim(),
+    due:document.getElementById('task-due').value,col:document.getElementById('task-col').value,
+    prio:document.getElementById('task-prio').value,created_at:new Date().toISOString(),id:Date.now()};
+  if(!t.name){alert('Nome da tarefa obrigatório.');return;}
+  if(editTaskIdx!==null){t.completedAt=tasks[editTaskIdx].completedAt||null; tasks[editTaskIdx]=t;} else tasks.push(t);
   closeTaskModal(); renderTasks(); persist('spf_tasks', tasks);
 }
 function deleteTask(i){if(!confirm('Eliminar tarefa?'))return;tasks.splice(i,1);renderTasks();persist('spf_tasks',tasks);}
@@ -2574,13 +2816,18 @@ create table if not exists spf_fixed_expenses (
 
 create table if not exists spf_visits (
   id bigint primary key,
-  date text, page text, ref text, ua text, created_at text
+  date text, page text, ref text, device text, os text, ua text, created_at text
 );
 
 create table if not exists spf_live (
   id text primary key,
-  ts timestamptz, page text
+  ts timestamptz, page text, device text
 );
+
+-- Se as tabelas já existirem, adicionar colunas novas:
+alter table spf_visits add column if not exists device text;
+alter table spf_visits add column if not exists os text;
+alter table spf_live add column if not exists device text;
 
 -- Desativar RLS (painel protegido por password)
 alter table spf_clients disable row level security;
