@@ -129,6 +129,7 @@ td.tp a:hover{color:var(--green);}
 .toast.show{transform:none;}
 .tdot{width:9px;height:9px;border-radius:50%;background:var(--green);animation:tp 1.5s infinite;flex-shrink:0;}
 @keyframes tp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.5)}}
+@keyframes livePulse{0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{opacity:.8;transform:scale(1.3);box-shadow:0 0 0 6px rgba(34,197,94,0)}}
 .tname{font-size:13px;font-weight:600;}
 .tinfo{font-size:11px;color:var(--sub);margin-top:2px;}
 
@@ -447,30 +448,37 @@ tr.row-cancelado{background:rgba(168,85,247,.04) !important;}
       <!-- Visits banner -->
       <div id="visits-banner" style="background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(168,85,247,.03));border:1px solid rgba(168,85,247,.18);border-radius:12px;padding:16px 24px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
         <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+          <!-- AO VIVO -->
+          <div style="display:flex;align-items:center;gap:10px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:10px 16px;">
+            <span id="live-dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#555;flex-shrink:0;"></span>
+            <div>
+              <div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:1px;">Ao Vivo</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;color:var(--green);line-height:1;" id="live-count">—</div>
+            </div>
+          </div>
+          <div style="width:1px;height:40px;background:var(--border);flex-shrink:0;"></div>
           <div>
             <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Visitas Hoje</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:1px;color:var(--purple);line-height:1;" id="visits-today">0</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:1px;color:var(--purple);line-height:1;" id="visits-today">—</div>
           </div>
           <div style="width:1px;height:40px;background:var(--border);flex-shrink:0;"></div>
           <div>
             <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Esta Semana</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:#c084fc;line-height:1;" id="visits-week">0</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:#c084fc;line-height:1;" id="visits-week">—</div>
           </div>
           <div style="width:1px;height:40px;background:var(--border);flex-shrink:0;"></div>
           <div>
             <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Este Mês</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:#a855f7;line-height:1;" id="visits-month">0</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:#a855f7;line-height:1;" id="visits-month">—</div>
           </div>
           <div style="width:1px;height:40px;background:var(--border);flex-shrink:0;"></div>
           <div>
-            <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Total (histórico)</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--sub);line-height:1;" id="visits-total">0</div>
+            <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub);margin-bottom:3px;">Total</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--sub);line-height:1;" id="visits-total">—</div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
-          <div style="font-size:11px;color:var(--sub);">
-            🔵 Registo automático via <strong style="color:var(--text);">stayperfit.pt</strong>
-          </div>
+          <div style="font-size:11px;color:var(--sub);">📡 Dados em tempo real via Supabase</div>
           <button class="tbtn tbtn-d" onclick="resetVisits()" title="Resetar contagem">🗑 Reset</button>
         </div>
       </div>
@@ -1156,6 +1164,7 @@ function startApp() {
   // Then fetch fresh data from Supabase
   load();
   startSync();
+  startLivePolling();
   showPage('dashboard', document.getElementById('btn-dashboard'));
   setTimeout(checkMonthlyNotifSchedule, 3000);
 }
@@ -1510,66 +1519,85 @@ function exportCSV() {
   document.body.appendChild(a);a.click();a.remove();
 }
 
-// ══ VISITS TRACKING ══
-// O index.html do site chama: trackSPFVisit() ou incrementa spf_visits_YYYY-MM-DD no localStorage
-// Este painel lê esses dados e exibe
-function getVisitsData() {
-  const data = {};
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    if (k && k.startsWith('spf_visits_')) {
-      const date = k.replace('spf_visits_', '');
-      data[date] = parseInt(localStorage.getItem(k) || '0');
-    }
-  }
-  return data;
+// ══ VISITS TRACKING (Supabase) ══
+async function loadVisitsData() {
+  try {
+    // Buscar todas as visitas
+    const data = await sb('/rest/v1/spf_visits?select=date&order=date.asc');
+    return data || [];
+  } catch(e) { return []; }
 }
 
-function renderVisitsStats() {
-  const data = getVisitsData();
+async function renderVisitsStats() {
+  const rows = await loadVisitsData();
   const today = new Date().toISOString().slice(0, 10);
-  const todayV = data[today] || 0;
 
-  // This week (Mon–Sun)
+  const todayV = rows.filter(r => r.date === today).length;
+
   const now = new Date();
   const dow = now.getDay() === 0 ? 6 : now.getDay() - 1;
   let weekV = 0;
   for (let i = 0; i <= dow; i++) {
     const d = new Date(now); d.setDate(d.getDate() - i);
-    weekV += data[d.toISOString().slice(0, 10)] || 0;
+    const ds = d.toISOString().slice(0, 10);
+    weekV += rows.filter(r => r.date === ds).length;
   }
 
-  // This month
   const monthPfx = today.slice(0, 7);
-  const monthV = Object.entries(data).filter(([k]) => k.startsWith(monthPfx)).reduce((s, [, v]) => s + v, 0);
+  const monthV = rows.filter(r => r.date && r.date.startsWith(monthPfx)).length;
+  const totalV = rows.length;
 
-  // Total
-  const totalV = Object.values(data).reduce((s, v) => s + v, 0);
+  const el = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  el('visits-today',  todayV);
+  el('visits-week',   weekV);
+  el('visits-month',  monthV);
+  el('visits-total',  totalV);
 
-  document.getElementById('visits-today').textContent = todayV;
-  document.getElementById('visits-week').textContent = weekV;
-  document.getElementById('visits-month').textContent = monthV;
-  document.getElementById('visits-total').textContent = totalV;
+  // Store rows for chart
+  window._visitsRows = rows;
 }
 
-function renderVisitsChart() {
-  const data = getVisitsData();
+async function renderVisitsChart() {
+  const rows = window._visitsRows || await loadVisitsData();
+  const period = parseInt(document.getElementById('dash-period')?.value || '7');
   const bars = [];
-  for (let i = 13; i >= 0; i--) {
+  for (let i = period - 1; i >= 0; i--) {
     const d = new Date(); d.setDate(d.getDate() - i);
     const ds = d.toISOString().slice(0, 10);
-    bars.push({ label: d.toLocaleDateString('pt-PT', { month: '2-digit', day: '2-digit' }), val: data[ds] || 0, color: '#a855f7' });
+    bars.push({ label: d.toLocaleDateString('pt-PT', { month: '2-digit', day: '2-digit' }), val: rows.filter(r => r.date === ds).length, color: '#a855f7' });
   }
   chart('chartVisits', bars);
 }
 
-function resetVisits() {
+async function renderLiveCount() {
+  try {
+    // Visitantes ao vivo = heartbeat nos últimos 60s
+    const cutoff = new Date(Date.now() - 60000).toISOString();
+    const data = await sb('/rest/v1/spf_live?select=id&ts=gte.' + cutoff);
+    const count = (data || []).length;
+    const el = document.getElementById('live-count');
+    const dot = document.getElementById('live-dot');
+    if (el) el.textContent = count;
+    if (dot) {
+      dot.style.background = count > 0 ? '#22c55e' : '#555';
+      dot.style.animation = count > 0 ? 'livePulse 1.5s infinite' : 'none';
+    }
+  } catch(e) {}
+}
+
+async function resetVisits() {
   if (!confirm('Apagar toda a contagem de visitas? Irreversível.')) return;
-  for (let i = localStorage.length - 1; i >= 0; i--) {
-    const k = localStorage.key(i);
-    if (k && k.startsWith('spf_visits_')) localStorage.removeItem(k);
-  }
-  renderVisitsStats(); renderVisitsChart();
+  try {
+    await sb('/rest/v1/spf_visits?created_at=not.is.null', { method: 'DELETE' });
+    await renderVisitsStats();
+    await renderVisitsChart();
+  } catch(e) { alert('Erro ao apagar: '+e.message); }
+}
+
+// Arrancar polling ao vivo a cada 10s
+function startLivePolling() {
+  renderLiveCount();
+  setInterval(renderLiveCount, 10000);
 }
 
 // ══ DASHBOARD ══
@@ -2544,13 +2572,25 @@ create table if not exists spf_fixed_expenses (
   recur text, "end" text, notes text, created_at text
 );
 
+create table if not exists spf_visits (
+  id bigint primary key,
+  date text, page text, ref text, ua text, created_at text
+);
+
+create table if not exists spf_live (
+  id text primary key,
+  ts timestamptz, page text
+);
+
 -- Desativar RLS (painel protegido por password)
 alter table spf_clients disable row level security;
 alter table spf_videos disable row level security;
 alter table spf_campaigns disable row level security;
 alter table spf_finances disable row level security;
 alter table spf_tasks disable row level security;
-alter table spf_fixed_expenses disable row level security;`;
+alter table spf_fixed_expenses disable row level security;
+alter table spf_visits disable row level security;
+alter table spf_live disable row level security;`;
 
 function showSqlSetup() {
   document.getElementById('sqlCode').value = SQL_SETUP;
