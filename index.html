@@ -104,7 +104,7 @@ nav {
 .hero {
   position: relative;
   width: 100%;
-  margin-top: 36px;
+  margin-top: 92px;
   overflow: hidden;
 }
 .hero-img {
@@ -122,10 +122,16 @@ nav {
   gap: 14px;
   animation: fadeUp .6s .2s ease both;
 }
-.hero-btns {
+.hero-form-card {
+  background: rgba(10,10,10,.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,0,0,.2);
+  border-radius: 12px;
+  padding: 20px;
   display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
+  width: 300px;
 }
 .hero-stats {
   display: flex; gap: 48px; flex-wrap: wrap; justify-content: center;
@@ -373,11 +379,6 @@ footer { padding: 32px 6vw; display: flex; align-items: center; justify-content:
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .contacto-grid { grid-template-columns: 1fr; }
-    .hero-btns { flex-direction: column; align-items: center; gap: 10px; }
-  .btn-primary, .btn-ghost { width: 100%; max-width: 320px; text-align: center; }
-  .hero-stats { flex-direction: row; justify-content: center; gap: 12px; }
-  .hero-stats .stat { padding: 12px 16px; flex: 1; min-width: 0; }
-  .stat-n { font-size: 32px; }
   .testi-slide { min-width: 88%; }
   .info-tab-btn { padding: 12px 16px; font-size: 13px; }
   .plans-grid { grid-template-columns: 1fr !important; }
@@ -387,11 +388,27 @@ footer { padding: 32px 6vw; display: flex; align-items: center; justify-content:
   #cookieBanner { flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px 5vw; }
   section { padding: 60px 5vw; }
   nav { padding: 0 5vw; }
-  .hero-overlay { bottom: 6%; }
-  .hero-overlay .btn-primary, .hero-overlay .btn-ghost { font-size: 13px; padding: 12px 20px; }
-  .hero-stats { gap: 12px; padding: 24px 5vw; }
-  .hero-stats .stat { padding: 12px 16px; flex: 1; min-width: 0; }
   #projeto-15-dias > div { grid-template-columns: 1fr !important; gap: 28px !important; }
+
+  /* Hero mobile */
+  .hero { margin-top: 92px; }
+  .hero-overlay {
+    position: static;
+    background: var(--bg);
+    padding: 16px 5vw 0;
+    gap: 0;
+  }
+  .hero-form-card {
+    width: 100%;
+    border-radius: 0 0 12px 12px;
+    border-top: none;
+    backdrop-filter: none;
+    background: #0f0f0f;
+  }
+  .hero-stats { gap: 8px; padding: 16px 5vw; }
+  .hero-stats .stat { padding: 12px 8px; flex: 1; min-width: 0; }
+  .stat-n { font-size: 28px; }
+  .stat-l { font-size: 10px; }
 }
 @media (max-width: 480px) {
   .announce-bar { font-size: 11px; }
@@ -464,12 +481,20 @@ function closeDrawer() { document.getElementById('navDrawer').classList.remove('
 </script>
 
 <!-- HERO -->
-<section class="hero" style="padding-top:92px;">
+<section class="hero">
   <img class="hero-img" src="banner.png" alt="StayPerfit — Coaching Online">
   <div class="hero-overlay">
-    <div class="hero-btns">
-      <a href="#contacto" class="btn-primary" id="hero-cta">Quero Começar →</a>
-      <button onclick="openLeadPopup()" class="btn-ghost" style="cursor:pointer;font-family:'DM Sans',sans-serif;background:transparent;color:var(--text);">📅 Agendar Chamada Gratuita</button>
+    <div class="hero-form-card" id="heroFormWrap">
+      <input class="lead-input" type="text" id="heroName" placeholder="O teu nome" autocomplete="name">
+      <input class="lead-input" type="tel" id="heroPhone" placeholder="Número de telemóvel" autocomplete="tel">
+      <button class="btn-primary" style="width:100%;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:14px;letter-spacing:.08em;text-transform:uppercase;" onclick="submitHeroForm()">
+        📅 Agendar Chamada Gratuita →
+      </button>
+    </div>
+    <div id="heroFormSuccess" style="display:none;text-align:center;padding:16px 20px;background:rgba(15,15,15,.95);border-radius:12px;border:1px solid rgba(255,0,0,.25);">
+      <div style="font-size:2rem;margin-bottom:6px;">✅</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;">Recebido!</div>
+      <p style="font-size:12px;color:var(--sub);margin-top:4px;">Entro em contacto nas próximas 24h.</p>
     </div>
   </div>
 </section>
@@ -877,6 +902,16 @@ async function saveLead(name, phone, source) {
     });
     if (!res.ok) console.error('Lead save error:', await res.text());
   } catch(e) { console.error('Lead save exception:', e); }
+}
+
+async function submitHeroForm() {
+  const name  = document.getElementById('heroName').value.trim();
+  const phone = document.getElementById('heroPhone').value.trim();
+  if (!name || !phone) { alert('Por favor preenche o nome e número de telefone.'); return; }
+  fbq('track', 'Lead');
+  await saveLead(name, phone, 'Hero Form');
+  document.getElementById('heroFormWrap').style.display = 'none';
+  document.getElementById('heroFormSuccess').style.display = 'block';
 }
 
 async function submitContacto() {
