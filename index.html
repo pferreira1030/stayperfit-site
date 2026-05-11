@@ -102,36 +102,58 @@ nav {
 
 /* ── Hero ── */
 .hero {
-  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: stretch;
   width: 100%;
   margin-top: 92px;
-  overflow: hidden;
+  background: #0a0a0a;
+  border-bottom: 1px solid rgba(255,0,0,.15);
 }
 .hero-img {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
 }
 .hero-overlay {
-  position: absolute;
-  bottom: 10%;
-  left: 6vw;
-  z-index: 2;
+  width: 300px;
+  flex-shrink: 0;
+  background: #0f0f0f;
+  border-left: 1px solid rgba(255,0,0,.2);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  justify-content: center;
+  padding: 32px 24px;
+  gap: 0;
   animation: fadeUp .6s .2s ease both;
 }
+.hero-overlay-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 12px;
+}
 .hero-form-card {
-  background: rgba(10,10,10,.88);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,0,0,.2);
-  border-radius: 12px;
-  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: 300px;
+}
+.hero-form-card .lead-input {
+  padding: 12px 14px;
+  font-size: 14px;
+}
+.hero-form-card .btn-primary {
+  padding: 13px 14px;
+  font-size: 13px;
+  letter-spacing: .06em;
+  border: none;
+  cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  width: 100%;
 }
 .hero-stats {
   display: flex; gap: 48px; flex-wrap: wrap; justify-content: center;
@@ -391,20 +413,20 @@ footer { padding: 32px 6vw; display: flex; align-items: center; justify-content:
   #projeto-15-dias > div { grid-template-columns: 1fr !important; gap: 28px !important; }
 
   /* Hero mobile */
-  .hero { margin-top: 92px; }
+  .hero {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    margin-top: 92px;
+  }
+  .hero-img { width: 100%; height: auto; object-fit: cover; }
   .hero-overlay {
-    position: static;
-    background: var(--bg);
-    padding: 16px 5vw 0;
-    gap: 0;
-  }
-  .hero-form-card {
     width: 100%;
-    border-radius: 0 0 12px 12px;
-    border-top: none;
-    backdrop-filter: none;
-    background: #0f0f0f;
+    border-left: none;
+    border-top: 1px solid rgba(255,0,0,.2);
+    padding: 20px 5vw;
   }
+  .hero-form-card .lead-input { font-size: 15px; padding: 13px 14px; }
+  .hero-form-card .btn-primary { font-size: 15px; padding: 14px; }
   .hero-stats { gap: 8px; padding: 16px 5vw; }
   .hero-stats .stat { padding: 12px 8px; flex: 1; min-width: 0; }
   .stat-n { font-size: 28px; }
@@ -484,17 +506,19 @@ function closeDrawer() { document.getElementById('navDrawer').classList.remove('
 <section class="hero">
   <img class="hero-img" src="banner.png" alt="StayPerfit — Coaching Online">
   <div class="hero-overlay">
-    <div class="hero-form-card" id="heroFormWrap">
+    <div class="hero-overlay-title">📅 Chamada Gratuita · Sem Compromisso</div>
+    <div id="heroFormWrap" class="hero-form-card">
       <input class="lead-input" type="text" id="heroName" placeholder="O teu nome" autocomplete="name">
       <input class="lead-input" type="tel" id="heroPhone" placeholder="Número de telemóvel" autocomplete="tel">
-      <button class="btn-primary" style="width:100%;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:14px;letter-spacing:.08em;text-transform:uppercase;" onclick="submitHeroForm()">
-        📅 Agendar Chamada Gratuita →
+      <button class="btn-primary" onclick="submitHeroForm()">
+        Agendar Agora →
       </button>
+      <p style="font-size:11px;color:#444;text-align:center;margin-top:2px;">🔒 Sem spam. Resposta em menos de 24h.</p>
     </div>
-    <div id="heroFormSuccess" style="display:none;text-align:center;padding:16px 20px;background:rgba(15,15,15,.95);border-radius:12px;border:1px solid rgba(255,0,0,.25);">
-      <div style="font-size:2rem;margin-bottom:6px;">✅</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;">Recebido!</div>
-      <p style="font-size:12px;color:var(--sub);margin-top:4px;">Entro em contacto nas próximas 24h.</p>
+    <div id="heroFormSuccess" style="display:none;text-align:center;padding:16px 0;">
+      <div style="font-size:2.2rem;margin-bottom:8px;">✅</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--text);">Recebido!</div>
+      <p style="font-size:13px;color:var(--sub);margin-top:6px;">Entro em contacto nas próximas 24h.<br>Fica atento ao telemóvel! 📲</p>
     </div>
   </div>
 </section>
@@ -651,7 +675,7 @@ function closeDrawer() { document.getElementById('navDrawer').classList.remove('
       <div class="offer-price" style="font-size:56px;">€33<span>/mês</span></div>
       <div style="margin-bottom:16px;">
         <span style="background:rgba(255,0,0,.2);color:var(--red);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:8px;">🎁 1º Mês GRÁTIS</span>
-        <div class="offer-period">Faturado €66 de 3 em 3 meses · 1º mês por nossa conta</div>
+        <div class="offer-period">Faturado €100 de 3 em 3 meses · 1º mês por nossa conta</div>
       </div>
     </div>
 
