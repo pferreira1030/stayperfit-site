@@ -514,7 +514,7 @@ function closeDrawer() { document.getElementById('navDrawer').classList.remove('
 <section class="hero">
   <img class="hero-img" src="banner.png" alt="StayPerfit — Coaching Online">
   <div class="hero-overlay">
-    <div class="hero-overlay-title">⚡️ Restam 3 vagas disponíveis</div>
+    <div class="hero-overlay-title">📅 Chamada Gratuita · Sem Compromisso</div>
     <div id="heroFormWrap" class="hero-form-card">
       <input class="lead-input" type="text" id="heroName" placeholder="O teu nome" autocomplete="name">
       <input class="lead-input" type="tel" id="heroPhone" placeholder="Número de telemóvel" autocomplete="tel">
@@ -670,9 +670,15 @@ function closeDrawer() { document.getElementById('navDrawer').classList.remove('
       <div class="offer-name">Coaching Mensal</div>
       <div class="offer-price-old">€40/mês</div>
       <div class="offer-price">€35<span>/mês</span></div>
-      <div class="offer-period" style="display:flex;align-items:center;gap:8px;">
-        <span style="background:rgba(255,0,0,.15);color:var(--red);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;">Poupa €5</span>
-        <span>Sem compromisso de permanência</span>
+      <div class="offer-period" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="background:rgba(255,0,0,.15);color:var(--red);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;">Poupa €5</span>
+          <span>Sem compromisso de permanência</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;background:rgba(255,0,0,.08);border:1px solid rgba(255,0,0,.2);border-radius:6px;padding:6px 10px;">
+          <span style="font-size:14px;">⏳</span>
+          <span style="font-size:12px;color:#ccc;">Promoção válida até <strong style="color:var(--red);" id="promo-end-date"></strong></span>
+        </div>
       </div>
     </div>
 
@@ -683,7 +689,7 @@ function closeDrawer() { document.getElementById('navDrawer').classList.remove('
       <div class="offer-price" style="font-size:56px;">€33<span>/mês</span></div>
       <div style="margin-bottom:16px;">
         <span style="background:rgba(255,0,0,.2);color:var(--red);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:8px;">🎁 1º Mês GRÁTIS</span>
-        <div class="offer-period">Faturado €100 de 3 em 3 meses · 1º 3 meses por 66€</div>
+        <div class="offer-period">Faturado €66 de 3 em 3 meses · 1º mês por nossa conta</div>
       </div>
     </div>
 
@@ -841,6 +847,16 @@ function closeDrawer() { document.getElementById('navDrawer').classList.remove('
 </div>
 
 <script>
+// ── Promo end date (last day of current month) ──
+(function(){
+  const el = document.getElementById('promo-end-date');
+  if (!el) return;
+  const now = new Date();
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  el.textContent = lastDay.getDate() + ' de ' + months[lastDay.getMonth()];
+})();
+
 // ── Intersection Observer (reveal) ──
 const observer = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
