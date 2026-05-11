@@ -107,6 +107,7 @@ nav {
   align-items: stretch;
   width: 100%;
   margin-top: 92px;
+  padding: 0 !important;
   background: #0a0a0a;
   border-bottom: 1px solid rgba(255,0,0,.15);
 }
@@ -417,8 +418,15 @@ footer { padding: 32px 6vw; display: flex; align-items: center; justify-content:
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
     margin-top: 92px;
+    padding: 0 !important;
   }
-  .hero-img { width: 100%; height: auto; object-fit: cover; }
+  .hero-img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    display: block;
+    content: url('banner-mobile.png');
+  }
   .hero-overlay {
     width: 100%;
     border-left: none;
@@ -506,7 +514,7 @@ function closeDrawer() { document.getElementById('navDrawer').classList.remove('
 <section class="hero">
   <img class="hero-img" src="banner.png" alt="StayPerfit — Coaching Online">
   <div class="hero-overlay">
-    <div class="hero-overlay-title">📅 Chamada Gratuita · Sem Compromisso</div>
+    <div class="hero-overlay-title">⚡️ Restam 3 vagas disponíveis</div>
     <div id="heroFormWrap" class="hero-form-card">
       <input class="lead-input" type="text" id="heroName" placeholder="O teu nome" autocomplete="name">
       <input class="lead-input" type="tel" id="heroPhone" placeholder="Número de telemóvel" autocomplete="tel">
@@ -675,7 +683,7 @@ function closeDrawer() { document.getElementById('navDrawer').classList.remove('
       <div class="offer-price" style="font-size:56px;">€33<span>/mês</span></div>
       <div style="margin-bottom:16px;">
         <span style="background:rgba(255,0,0,.2);color:var(--red);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:8px;">🎁 1º Mês GRÁTIS</span>
-        <div class="offer-period">Faturado €100 de 3 em 3 meses · 1º mês por nossa conta</div>
+        <div class="offer-period">Faturado €66 de 3 em 3 meses · 1º mês por nossa conta</div>
       </div>
     </div>
 
